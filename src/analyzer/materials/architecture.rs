@@ -18,8 +18,9 @@ impl Architecture {
         }
     }
 
-    pub fn add_access_rule(&mut self, access_rule: impl AccessRule + 'static) {
+    pub fn with_access_rule(mut self, access_rule: impl AccessRule + 'static) -> Self {
         self.access_rules.push(Box::new(access_rule));
+        self
     }
 
     pub fn check_access_rules(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
