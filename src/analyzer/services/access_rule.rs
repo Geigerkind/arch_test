@@ -12,9 +12,8 @@ pub trait AccessRule {
 
 impl AccessRule for MayOnlyAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
-        for (_, node) in module_tree.tree().iter().enumerate().filter(|(index, node)| node.module_name() == self.accessor()
-            || has_parent_matching_name(&hash_set![self.accessor().clone()], *index, module_tree.tree())) {
-            if node.object_uses(module_tree.tree(), module_tree.possible_uses(), false).iter()
+        for (_, node) in module_tree.tree().iter().enumerate().filter(|(index, node)| node.module_name() == self.accessor()) {
+            if node.object_uses(module_tree.tree(), module_tree.possible_uses(), true).iter()
                 .any(|obj_use| !self.accessed().contains(module_tree.tree()[*obj_use.node_index()].module_name())
                     && !has_parent_matching_name(self.accessed(), *obj_use.node_index(), module_tree.tree())) {
                 return Err(RuleViolation);
@@ -26,9 +25,8 @@ impl AccessRule for MayOnlyAccess {
 
 impl AccessRule for MayNotAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
-        for (_, node) in module_tree.tree().iter().enumerate().filter(|(index, node)| node.module_name() == self.accessor()
-            || has_parent_matching_name(&hash_set![self.accessor().clone()], *index, module_tree.tree())) {
-            if node.object_uses(module_tree.tree(), module_tree.possible_uses(), false).iter()
+        for (_, node) in module_tree.tree().iter().enumerate().filter(|(index, node)| node.module_name() == self.accessor()) {
+            if node.object_uses(module_tree.tree(), module_tree.possible_uses(), true).iter()
                 .any(|obj_use| self.accessed().contains(module_tree.tree()[*obj_use.node_index()].module_name())
                     || has_parent_matching_name(self.accessed(), *obj_use.node_index(), module_tree.tree())) {
                 return Err(RuleViolation);
