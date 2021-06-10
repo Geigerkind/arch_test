@@ -3,8 +3,9 @@
 extern crate derive_getters;
 #[macro_use]
 extern crate derive_new;
-extern crate velcro;
 // TODO Republsh hash_set macro
+extern crate velcro;
+extern crate syntax;
 
 use std::collections::HashSet;
 

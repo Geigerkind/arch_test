@@ -8,6 +8,7 @@ use regex::Regex;
 
 use crate::parser::domain_values::{ObjectType, ObjectUse, ParseFailure, UsableObject};
 use crate::parser::entities::ModuleNode;
+use crate::parser::utils::read_file_content;
 
 #[derive(Debug, Getters)]
 pub struct ModuleTree {
@@ -23,7 +24,7 @@ impl ModuleTree {
         }
 
         let mut module_tree = ModuleTree { tree: vec![], possible_uses: HashMap::default() };
-        if let Err(e) = module_tree.parse(path, None, None, 0, "crate".to_owned()) {
+        if let Err(e) = module_tree.parse_DEPRECATED(path, None, None, 0, "crate".to_owned()) {
             return Err(e);
         }
         module_tree.correct_fully_qualified_names();
@@ -32,7 +33,7 @@ impl ModuleTree {
         Ok(module_tree)
     }
 
-    fn parse(&mut self, path: &Path, file_content: Option<String>, parent_index: Option<usize>, level: usize, module_name: String) -> Result<(), ParseFailure> {
+    fn parse_DEPRECATED(&mut self, path: &Path, file_content: Option<String>, parent_index: Option<usize>, level: usize, module_name: String) -> Result<(), ParseFailure> {
         let current_index = self.tree.len();
         self.tree.push(ModuleNode::new(path.to_path_buf().into_os_string().into_string().unwrap(), level, parent_index, module_name));
 
@@ -42,37 +43,37 @@ impl ModuleTree {
 
         if file_content.is_some() || path.is_file() {
             let file_content = file_content.unwrap_or(read_file_content(path));
-            let (child_modules, pseudo_files, usable_objects) = parse_file(file_content);
+            let (child_modules, pseudo_files, usable_objects) = parse_file_DEPRECATED(file_content);
             self.tree.get_mut(current_index).unwrap().usable_objects = usable_objects;
             if !child_modules.is_empty() {
                 if let Some(parent) = path.parent() {
                     let dir_entries: Vec<DirEntry> = parent.read_dir().unwrap().filter_map(|entry| entry.ok()).collect();
                     for entry in dir_entries.into_iter().filter(|entry| child_modules.iter()
                         .any(|module| entry.file_name().to_str().unwrap().to_string().contains(module))) {
-                        self.parse(&entry.path(), None, Some(current_index), level + 1,
-                                   entry.file_name().to_str().unwrap().to_string().trim_end_matches(".rs").to_string())?;
+                        self.parse_DEPRECATED(&entry.path(), None, Some(current_index), level + 1,
+                                              entry.file_name().to_str().unwrap().to_string().trim_end_matches(".rs").to_string())?;
                     }
                 }
             }
 
             for (module_name, file_content) in pseudo_files {
-                self.parse(path, Some(file_content), Some(current_index), level + 1, module_name)?;
+                self.parse_DEPRECATED(path, Some(file_content), Some(current_index), level + 1, module_name)?;
             }
         } else {
             let dir_entries: Vec<DirEntry> = path.read_dir().unwrap().filter_map(|entry| entry.ok()).collect();
             if let Some(dir_entry) = dir_entries.iter().find(|i_path| i_path.path().is_file()
                 && (i_path.file_name().to_str().contains(&"main.rs") || i_path.file_name().to_str().contains(&"mod.rs"))) {
-                let (child_modules, pseudo_files, usable_objects) = parse_file(read_file_content(&dir_entry.path()));
+                let (child_modules, pseudo_files, usable_objects) = parse_file_DEPRECATED(read_file_content(&dir_entry.path()));
                 self.tree.get_mut(current_index).unwrap().usable_objects = usable_objects;
 
                 for entry in dir_entries.iter().filter(|entry| child_modules.iter()
                     .any(|module| entry.file_name().to_str().unwrap().to_string().contains(module))) {
-                    self.parse(&entry.path(), None, Some(current_index), level + 1,
-                               entry.file_name().to_str().unwrap().to_string().trim_end_matches(".rs").to_string())?;
+                    self.parse_DEPRECATED(&entry.path(), None, Some(current_index), level + 1,
+                                          entry.file_name().to_str().unwrap().to_string().trim_end_matches(".rs").to_string())?;
                 }
 
                 for (module_name, file_content) in pseudo_files {
-                    self.parse(&dir_entry.path(), Some(file_content), Some(current_index), level + 1, module_name)?;
+                    self.parse_DEPRECATED(&dir_entry.path(), Some(file_content), Some(current_index), level + 1, module_name)?;
                 }
             } else {
                 return Err(ParseFailure::PathIsNotARustDirectory);
@@ -145,14 +146,7 @@ impl ModuleTree {
     }
 }
 
-fn read_file_content(file_path: &Path) -> String {
-    let mut file = std::fs::File::open(file_path).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
-    contents
-}
-
-fn parse_file(contents: String) -> (Vec<String>, Vec<(String, String)>, Vec<UsableObject>) {
+fn parse_file_DEPRECATED(contents: String) -> (Vec<String>, Vec<(String, String)>, Vec<UsableObject>) {
     let mut chars = contents.chars();
     let mut scope_counter = 0;
     let mut previous_characters = String::new();

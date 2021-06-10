@@ -9,3 +9,4 @@ derive-getters = "0.2.0"
 derive-new = "0.5.9"
 regex = "1.5.4"
 velcro = "0.5.3"
+syntax = { git = "https://github.com/rust-analyzer/rust-analyzer" }
