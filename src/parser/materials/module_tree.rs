@@ -5,6 +5,8 @@ use std::path::Path;
 use std::str::Chars;
 
 use regex::Regex;
+use syntax::{AstNode, SourceFile, SyntaxKind, SyntaxNode};
+use syntax::ast::ModuleItemOwner;
 
 use crate::parser::domain_values::{ObjectType, ObjectUse, ParseFailure, UsableObject};
 use crate::parser::entities::ModuleNode;
@@ -24,6 +26,7 @@ impl ModuleTree {
         }
 
         let mut module_tree = ModuleTree { tree: vec![], possible_uses: HashMap::default() };
+        parse_file(read_file_content(Path::new("/home/shino/hacking/use_ex.rs")));
         if let Err(e) = module_tree.parse_DEPRECATED(path, None, None, 0, "crate".to_owned()) {
             return Err(e);
         }
@@ -144,6 +147,83 @@ impl ModuleTree {
             }
         }
     }
+}
+
+fn parse_file(file_content: String) -> (Vec<String>, Vec<(String, String)>, Vec<UsableObject>) {
+    let mut usable_objects: Vec<UsableObject> = Vec::new();
+
+    let result = SourceFile::parse(&file_content);
+    for item in result.tree().items() {
+        match item.syntax().kind() {
+            SyntaxKind::USE => {
+                let (is_pub, paths) = parse_use_paths(item.syntax());
+                for path in paths {
+                    usable_objects.push(UsableObject::new(if is_pub { ObjectType::RePublish } else { ObjectType::Use }, path));
+                }
+            }
+            SyntaxKind::STRUCT => {}
+            SyntaxKind::STRUCT_KW => {
+                println!("STRUCT_KW ?!?!: {}", item.to_string());
+            }
+            SyntaxKind::ENUM => {}
+            SyntaxKind::ENUM_KW => {
+                println!("ENUM_KW ?!?!: {}", item.to_string());
+            }
+            SyntaxKind::FN => {}
+            SyntaxKind::FN_KW => {
+                println!("FN_KW ?!?!: {}", item.to_string());
+            }
+            _ => {
+                // Do Nothing
+                continue;
+            }
+        }
+    }
+
+    println!("{:?}", usable_objects);
+
+    (vec![], vec![], vec![])
+}
+
+fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<String>) {
+    let mut visibility = false;
+    let mut paths = Vec::new();
+    for child in syntax_node.children() {
+        match child.kind() {
+            SyntaxKind::VISIBILITY => {
+                visibility = true;
+            },
+            SyntaxKind::USE_TREE => {
+                paths = parse_use_tree(&child)
+            }
+            _ => unreachable!()
+        }
+    }
+    (visibility, paths)
+}
+
+fn parse_use_tree(syntax_node: &SyntaxNode) -> Vec<String> {
+    let mut path_segments = Vec::new();
+    let mut current_prefix = String::new();
+    for sub_child in syntax_node.children() {
+        match sub_child.kind() {
+            SyntaxKind::PATH => {
+                current_prefix = sub_child.to_string();
+            },
+            SyntaxKind::USE_TREE_LIST => {
+                for use_tree in sub_child.children() {
+                    for segment in parse_use_tree(&use_tree) {
+                        path_segments.push(format!("{}::{}", current_prefix, segment));
+                    }
+                }
+            }
+            _ => unreachable!()
+        }
+    }
+    if path_segments.is_empty() {
+        return vec![current_prefix];
+    }
+    path_segments
 }
 
 fn parse_file_DEPRECATED(contents: String) -> (Vec<String>, Vec<(String, String)>, Vec<UsableObject>) {
