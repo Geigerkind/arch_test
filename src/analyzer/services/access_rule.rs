@@ -1,11 +1,11 @@
 use std::collections::HashSet;
 
-use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoParentAccess, NoModuleCyclicDependencies};
+use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoParentAccess, NoModuleCyclicDependencies, NoLayerCyclicDependencies};
 use crate::analyzer::domain_values::RuleViolation;
 use crate::parser::entities::ModuleNode;
 use crate::parser::materials::ModuleTree;
 use crate::velcro::hash_set;
-use crate::analyzer::services::contains_cyclic_dependency;
+use crate::analyzer::services::{contains_cyclic_dependency, contains_cyclic_dependency_on_any_level};
 
 pub trait AccessRule {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation>;
@@ -52,6 +52,15 @@ impl AccessRule for NoParentAccess {
 impl AccessRule for NoModuleCyclicDependencies {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
         if contains_cyclic_dependency(module_tree) {
+            return Err(RuleViolation);
+        }
+        Ok(())
+    }
+}
+
+impl AccessRule for NoLayerCyclicDependencies {
+    fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
+        if contains_cyclic_dependency_on_any_level(module_tree) {
             return Err(RuleViolation);
         }
         Ok(())
