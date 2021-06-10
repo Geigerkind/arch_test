@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess};
+use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoParentAccess};
 use crate::analyzer::domain_values::RuleViolation;
 use crate::parser::entities::ModuleNode;
 use crate::parser::materials::ModuleTree;
@@ -29,6 +29,18 @@ impl AccessRule for MayNotAccess {
             if node.object_uses(module_tree.tree(), module_tree.possible_uses(), true).iter()
                 .any(|obj_use| self.accessed().contains(module_tree.tree()[*obj_use.node_index()].module_name())
                     || has_parent_matching_name(self.accessed(), *obj_use.node_index(), module_tree.tree())) {
+                return Err(RuleViolation);
+            }
+        }
+        Ok(())
+    }
+}
+
+impl AccessRule for NoParentAccess {
+    fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
+        for node in module_tree.tree().iter() {
+            if node.parent_index().is_some() && node.object_uses(module_tree.tree(), module_tree.possible_uses(), true).iter()
+                .any(|obj_use| node.parent_index().contains(obj_use.node_index())) {
                 return Err(RuleViolation);
             }
         }
