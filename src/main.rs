@@ -12,7 +12,6 @@ use velcro::hash_set;
 
 use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoParentAccess, NoModuleCyclicDependencies, NoLayerCyclicDependencies};
 use crate::analyzer::materials::Architecture;
-use crate::analyzer::services::{contains_cyclic_dependency, contains_cyclic_dependency_on_any_level, contains_cyclic_dependency_on_level};
 use crate::parser::materials::ModuleTree;
 
 mod analyzer;
@@ -28,10 +27,5 @@ fn main() {
         .with_access_rule(NoParentAccess)
         .with_access_rule(NoModuleCyclicDependencies)
         .with_access_rule(NoLayerCyclicDependencies);
-    println!("{:?}", module_tree);
     println!("Check Access Rules: {:?}", architecture.check_access_rules(&module_tree));
-    println!("Per module: {:?}", contains_cyclic_dependency(&module_tree));
-    println!("Per any level: {:?}", contains_cyclic_dependency_on_any_level(&module_tree));
-    println!("Per level 1: {:?}", contains_cyclic_dependency_on_level(&module_tree, 1));
-    println!("Per level 2: {:?}", contains_cyclic_dependency_on_level(&module_tree, 2));
 }

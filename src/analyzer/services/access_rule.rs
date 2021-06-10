@@ -5,7 +5,7 @@ use crate::analyzer::domain_values::RuleViolation;
 use crate::parser::entities::ModuleNode;
 use crate::parser::materials::ModuleTree;
 use crate::velcro::hash_set;
-use crate::analyzer::services::{contains_cyclic_dependency, contains_cyclic_dependency_on_any_level};
+use crate::analyzer::services::cyclic_dependency::{contains_cyclic_dependency, contains_cyclic_dependency_on_any_level};
 
 pub trait AccessRule {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation>;
