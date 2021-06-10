@@ -1,0 +1,11 @@
+[package]
+name = "arch_test"
+version = "0.1.0"
+edition = "2018"
+authors = ["Tom Dymel <tom@dymel.dev>"]
+
+[dependencies]
+derive-getters = "0.2.0"
+derive-new = "0.5.9"
+regex = "1.5.4"
+velcro = "0.5.3"
