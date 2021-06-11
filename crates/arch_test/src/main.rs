@@ -22,5 +22,8 @@ fn main() {
     if let Ok(architecture) = specification {
         let module_tree = ModuleTree::new(opts.input.to_str().unwrap());
         println!("{:?}", architecture.check_access_rules(&module_tree));
+        if opts.check_for_complete_layer_specification {
+            println!("{:?}", architecture.check_complete_layer_specification(&module_tree));
+        }
     }
 }
