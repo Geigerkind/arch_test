@@ -1,5 +1,5 @@
 [package]
-name = "arch_test"
+name = "arch_test_core"
 version = "0.1.0"
 edition = "2018"
 authors = ["Tom Dymel <tom@dymel.dev>"]

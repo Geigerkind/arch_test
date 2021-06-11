@@ -1,0 +1,7 @@
+[package]
+name = "arch_test"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+arch_test_core = { path = "../arch_test_core" }

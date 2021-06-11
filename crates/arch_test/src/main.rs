@@ -1,21 +1,8 @@
-#![feature(option_result_contains)]
-#[macro_use]
-extern crate derive_getters;
-#[macro_use]
-extern crate derive_new;
-extern crate syntax;
-extern crate velcro;
-
 use std::collections::HashSet;
 
-pub use velcro::hash_set;
-
-use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess};
-use crate::analyzer::materials::Architecture;
-use crate::parser::materials::ModuleTree;
-
-mod analyzer;
-mod parser;
+use arch_test_core::{Architecture, ModuleTree};
+use arch_test_core::access_rules::{MayOnlyAccess, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess};
+use arch_test_core::hash_set;
 
 fn main() {
     let module_tree = ModuleTree::new("/home/shino/hacking/cyclic_dep_test/src/main.rs");
