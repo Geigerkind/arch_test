@@ -3,15 +3,14 @@
 extern crate derive_getters;
 #[macro_use]
 extern crate derive_new;
-// TODO Republsh hash_set macro
-extern crate velcro;
 extern crate syntax;
+extern crate velcro;
 
 use std::collections::HashSet;
 
-use velcro::hash_set;
+pub use velcro::hash_set;
 
-use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoParentAccess, NoModuleCyclicDependencies, NoLayerCyclicDependencies};
+use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess};
 use crate::analyzer::materials::Architecture;
 use crate::parser::materials::ModuleTree;
 
