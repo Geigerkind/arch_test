@@ -1,14 +1,10 @@
 use std::collections::HashMap;
 use std::fs::DirEntry;
-use std::io::Read;
 use std::path::Path;
-use std::str::Chars;
 
-use regex::Regex;
-use syntax::{AstNode, SourceFile, SyntaxKind, SyntaxNode};
-use syntax::ast::ModuleItemOwner;
+use syntax::{SourceFile, SyntaxKind, SyntaxNode, SyntaxNodeChildren};
 
-use crate::parser::domain_values::{ObjectType, ObjectUse, ParseFailure, UsableObject};
+use crate::parser::domain_values::{ObjectType, ObjectUse, UsableObject};
 use crate::parser::entities::ModuleNode;
 use crate::parser::utils::read_file_content;
 
@@ -19,71 +15,53 @@ pub struct ModuleTree {
 }
 
 impl ModuleTree {
-    pub fn new(root_directory: &str) -> Result<Self, ParseFailure> {
+    pub fn new(root_directory: &str) -> Self {
         let path = Path::new(root_directory);
-        if !path.exists() {
-            return Err(ParseFailure::NotAPath);
-        }
+        assert!(path.exists(), "Expecting a valid path");
+        assert!(path.is_file(), "Expecting path to be a file!");
+        assert!(path.file_name().and_then(|os_str| os_str.to_str()).contains(&"main.rs"), "Expecting file to be main.rs");
 
         let mut module_tree = ModuleTree { tree: vec![], possible_uses: HashMap::default() };
-        parse_file(read_file_content(Path::new("/home/shino/hacking/use_ex.rs")));
-        if let Err(e) = module_tree.parse_DEPRECATED(path, None, None, 0, "crate".to_owned()) {
-            return Err(e);
-        }
+        // TODO: Module name if not crate
+        module_tree.parse_main_or_mod_file(path, 0, None, "crate".to_owned());
+        println!("{:?}", module_tree);
         module_tree.correct_fully_qualified_names();
         module_tree.correct_republish_paths();
         module_tree.construct_possible_use_map();
-        Ok(module_tree)
+        module_tree
     }
 
-    fn parse_DEPRECATED(&mut self, path: &Path, file_content: Option<String>, parent_index: Option<usize>, level: usize, module_name: String) -> Result<(), ParseFailure> {
-        let current_index = self.tree.len();
-        self.tree.push(ModuleNode::new(path.to_path_buf().into_os_string().into_string().unwrap(), level, parent_index, module_name));
+    fn parse_main_or_mod_file(&mut self, file_path: &Path, level: usize, parent_index: Option<usize>, module_name: String) {
+        let mut module_references: Vec<(usize, String)> = Vec::new();
 
+        let result = SourceFile::parse(&read_file_content(file_path));
+        self.parse_syntax_node_tree(result.syntax_node().children(), level, parent_index, module_name, &mut module_references);
+
+        let dir_entries: Vec<DirEntry> = file_path.parent().unwrap().read_dir().unwrap().filter_map(|entry| entry.ok()).collect();
+        for (parent_index, sub_module) in module_references {
+            if let Some(entry) = dir_entries.iter().find(|entry| entry.file_name().to_str().unwrap().to_string().contains(&sub_module)) {
+                if entry.path().is_dir() {
+                    let path_str = format!("{}/mod.rs", entry.path().to_str().unwrap().to_string());
+                    self.parse_main_or_mod_file(Path::new(&path_str), *self.tree[parent_index].level() + 1, Some(parent_index), sub_module);
+                } else {
+                    self.parse_main_or_mod_file(&entry.path(), *self.tree[parent_index].level() + 1, Some(parent_index), sub_module);
+                }
+            }
+        }
+    }
+
+    fn parse_syntax_node_tree(&mut self, syntax_node_children: SyntaxNodeChildren, level: usize, parent_index: Option<usize>, module_name: String, module_references: &mut Vec<(usize, String)>) {
+        self.tree.push(ModuleNode::new("TODO".to_owned(), level, parent_index, module_name));
+        let current_index = self.tree.len() - 1;
         if let Some(parent_index) = parent_index {
             self.tree.get_mut(parent_index).unwrap().register_child(current_index);
         }
 
-        if file_content.is_some() || path.is_file() {
-            let file_content = file_content.unwrap_or(read_file_content(path));
-            let (child_modules, pseudo_files, usable_objects) = parse_file_DEPRECATED(file_content);
-            self.tree.get_mut(current_index).unwrap().usable_objects = usable_objects;
-            if !child_modules.is_empty() {
-                if let Some(parent) = path.parent() {
-                    let dir_entries: Vec<DirEntry> = parent.read_dir().unwrap().filter_map(|entry| entry.ok()).collect();
-                    for entry in dir_entries.into_iter().filter(|entry| child_modules.iter()
-                        .any(|module| entry.file_name().to_str().unwrap().to_string().contains(module))) {
-                        self.parse_DEPRECATED(&entry.path(), None, Some(current_index), level + 1,
-                                              entry.file_name().to_str().unwrap().to_string().trim_end_matches(".rs").to_string())?;
-                    }
-                }
-            }
-
-            for (module_name, file_content) in pseudo_files {
-                self.parse_DEPRECATED(path, Some(file_content), Some(current_index), level + 1, module_name)?;
-            }
-        } else {
-            let dir_entries: Vec<DirEntry> = path.read_dir().unwrap().filter_map(|entry| entry.ok()).collect();
-            if let Some(dir_entry) = dir_entries.iter().find(|i_path| i_path.path().is_file()
-                && (i_path.file_name().to_str().contains(&"main.rs") || i_path.file_name().to_str().contains(&"mod.rs"))) {
-                let (child_modules, pseudo_files, usable_objects) = parse_file_DEPRECATED(read_file_content(&dir_entry.path()));
-                self.tree.get_mut(current_index).unwrap().usable_objects = usable_objects;
-
-                for entry in dir_entries.iter().filter(|entry| child_modules.iter()
-                    .any(|module| entry.file_name().to_str().unwrap().to_string().contains(module))) {
-                    self.parse_DEPRECATED(&entry.path(), None, Some(current_index), level + 1,
-                                          entry.file_name().to_str().unwrap().to_string().trim_end_matches(".rs").to_string())?;
-                }
-
-                for (module_name, file_content) in pseudo_files {
-                    self.parse_DEPRECATED(&dir_entry.path(), Some(file_content), Some(current_index), level + 1, module_name)?;
-                }
-            } else {
-                return Err(ParseFailure::PathIsNotARustDirectory);
+        for item in syntax_node_children {
+            if let Some((inner_module_start_node, inner_module_name)) = parse_file_rec(&item, module_references, &mut self.tree.last_mut().unwrap().usable_objects, current_index) {
+                self.parse_syntax_node_tree(inner_module_start_node, level + 1, Some(current_index), inner_module_name, module_references);
             }
         }
-
-        Ok(())
     }
 
     fn correct_fully_qualified_names(&mut self) {
@@ -149,40 +127,155 @@ impl ModuleTree {
     }
 }
 
-fn parse_file(file_content: String) -> (Vec<String>, Vec<(String, String)>, Vec<UsableObject>) {
-    let mut usable_objects: Vec<UsableObject> = Vec::new();
-
-    let result = SourceFile::parse(&file_content);
-    for item in result.tree().items() {
-        match item.syntax().kind() {
-            SyntaxKind::USE => {
-                let (is_pub, paths) = parse_use_paths(item.syntax());
-                for path in paths {
-                    usable_objects.push(UsableObject::new(if is_pub { ObjectType::RePublish } else { ObjectType::Use }, path));
-                }
-            }
-            SyntaxKind::STRUCT => {}
-            SyntaxKind::STRUCT_KW => {
-                println!("STRUCT_KW ?!?!: {}", item.to_string());
-            }
-            SyntaxKind::ENUM => {}
-            SyntaxKind::ENUM_KW => {
-                println!("ENUM_KW ?!?!: {}", item.to_string());
-            }
-            SyntaxKind::FN => {}
-            SyntaxKind::FN_KW => {
-                println!("FN_KW ?!?!: {}", item.to_string());
-            }
-            _ => {
-                // Do Nothing
-                continue;
+// TODO: Generic types?
+// TODO: Handle Path attribute and *
+// TODO: Combined path types with custom impl, e.g. a::b::<c>::test(), where test was implemented by some trait in this crate
+// TODO: Impl Self object use filtering?
+fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, String)>, usable_objects: &mut Vec<UsableObject>, current_index: usize) -> Option<(SyntaxNodeChildren, String)> {
+    match syntax_node.kind() {
+        SyntaxKind::USE => {
+            let (is_pub, paths) = parse_use_paths(syntax_node);
+            for path in paths {
+                usable_objects.push(UsableObject::new(if is_pub { ObjectType::RePublish } else { ObjectType::Use }, path));
             }
         }
+        SyntaxKind::STRUCT => {
+            for child in syntax_node.children() {
+                match child.kind() {
+                    SyntaxKind::NAME => {
+                        usable_objects.push(UsableObject::new(ObjectType::Struct, child.to_string()));
+                    }
+                    SyntaxKind::RECORD_FIELD_LIST => {
+                        for impl_use_path in parse_field_list(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        }
+                    }
+                    _ => {
+                        continue;
+                    }
+                }
+            }
+        }
+        SyntaxKind::ENUM => {
+            for child in syntax_node.children() {
+                match child.kind() {
+                    SyntaxKind::NAME => {
+                        usable_objects.push(UsableObject::new(ObjectType::Enum, child.to_string()));
+                    }
+                    SyntaxKind::VARIANT_LIST => {
+                        for variant in child.children() {
+                            for arg in variant.children() {
+                                match arg.kind() {
+                                    SyntaxKind::TUPLE_FIELD_LIST | SyntaxKind::RECORD_FIELD_LIST => {
+                                        for impl_use_path in parse_field_list(&arg) {
+                                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                                        }
+                                    }
+                                    _ => continue
+                                }
+                            }
+                        }
+                    }
+                    _ => continue
+                }
+            }
+        }
+        SyntaxKind::FN => {
+            for child in syntax_node.children() {
+                match child.kind() {
+                    SyntaxKind::NAME => {
+                        usable_objects.push(UsableObject::new(ObjectType::Function, child.to_string()));
+                    }
+                    SyntaxKind::PARAM_LIST => {
+                        for impl_use_path in parse_field_list(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        }
+                    }
+                    SyntaxKind::RET_TYPE => {
+                        for ret in child.children() {
+                            match ret.kind() {
+                                SyntaxKind::PATH_TYPE => {
+                                    for impl_use_path in parse_path_type(&ret) {
+                                        usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                                    }
+                                }
+                                _ => continue
+                            }
+                        }
+                    }
+                    _ => {
+                        continue;
+                    }
+                }
+            }
+        }
+        SyntaxKind::BLOCK_EXPR |
+        SyntaxKind::LET_STMT |
+        SyntaxKind::BIN_EXPR |
+        SyntaxKind::TUPLE_EXPR |
+        SyntaxKind::PAREN_EXPR |
+        SyntaxKind::EXPR_STMT => {
+            for child in syntax_node.children() {
+                parse_file_rec(&child, module_references, usable_objects, current_index);
+            }
+        }
+        SyntaxKind::PATH_EXPR => {
+            for impl_use_path in parse_path_type(&syntax_node) {
+                usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+            }
+        }
+        SyntaxKind::TRAIT => {
+            for child in syntax_node.children() {
+                match child.kind() {
+                    SyntaxKind::NAME => {
+                        usable_objects.push(UsableObject::new(ObjectType::Trait, child.to_string()));
+                    }
+                    SyntaxKind::ASSOC_ITEM_LIST => {
+                        for impl_use_path in parse_assoc_func_item_list(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        }
+                    }
+                    _ => continue
+                }
+            }
+        }
+        SyntaxKind::IMPL => {
+            for child in syntax_node.children() {
+                match child.kind() {
+                    SyntaxKind::PATH_TYPE => {
+                        for impl_use_path in parse_path_type(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        }
+                    }
+                    SyntaxKind::ASSOC_ITEM_LIST => {
+                        // TODO: Properly handle assoc list for trait impl
+                        for impl_use_path in parse_assoc_func_item_list(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        }
+                    }
+                    _ => continue
+                }
+            }
+        }
+        SyntaxKind::MODULE => {
+            for child in syntax_node.children() {
+                match child.kind() {
+                    SyntaxKind::NAME => {
+                        module_references.push((current_index, child.to_string()));
+                    }
+                    SyntaxKind::ITEM_LIST => {
+                        return Some((child.children(), module_references.pop().unwrap().1));
+                    }
+                    _ => continue
+                }
+            }
+        }
+        _ => {
+            println!("UNHANDLED EXPRESSION: {:?}", syntax_node);
+            return None;
+        }
     }
-
-    println!("{:?}", usable_objects);
-
-    (vec![], vec![], vec![])
+    None
 }
 
 fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<String>) {
@@ -192,7 +285,7 @@ fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<String>) {
         match child.kind() {
             SyntaxKind::VISIBILITY => {
                 visibility = true;
-            },
+            }
             SyntaxKind::USE_TREE => {
                 paths = parse_use_tree(&child)
             }
@@ -209,7 +302,7 @@ fn parse_use_tree(syntax_node: &SyntaxNode) -> Vec<String> {
         match sub_child.kind() {
             SyntaxKind::PATH => {
                 current_prefix = sub_child.to_string();
-            },
+            }
             SyntaxKind::USE_TREE_LIST => {
                 for use_tree in sub_child.children() {
                     for segment in parse_use_tree(&use_tree) {
@@ -226,163 +319,105 @@ fn parse_use_tree(syntax_node: &SyntaxNode) -> Vec<String> {
     path_segments
 }
 
-fn parse_file_DEPRECATED(contents: String) -> (Vec<String>, Vec<(String, String)>, Vec<UsableObject>) {
-    let mut chars = contents.chars();
-    let mut scope_counter = 0;
-    let mut previous_characters = String::new();
-
-    let mut begin_identifier_name = false;
-    let mut parse_use_stmt = false;
-    let mut current_identifier_object_type: Option<ObjectType> = None;
-    let mut current_identifier = String::new();
-
-    let mut impl_scope: Option<i32> = None;
-    let mut mod_scope: Option<(String, String, i32)> = None;
-
-    let mut child_modules: Vec<String> = Vec::new();
-    let mut usable_objects: Vec<UsableObject> = Vec::new();
-    let mut mod_pseudo_files: Vec<(String, String)> = Vec::new();
-
-    loop {
-        let next_character = chars.next();
-        if next_character.is_none() {
-            break;
-        }
-        let mut character = next_character.unwrap();
-
-        if let Some((_, pseudo_file, _)) = mod_scope.as_mut() {
-            *pseudo_file += &character.to_string();
-        }
-
-        if begin_identifier_name && ((!character.is_alphanumeric() && character != '_' && character != ':' && (!parse_use_stmt || (character != ' ' && character != '{' && character != '}' && character != ',')))
-            || character == ';' || (!parse_use_stmt && (character == ' ' || character == '{'))) {
-            begin_identifier_name = false;
-
-            if current_identifier_object_type.contains(&ObjectType::Mod) {
-                let look_ahead_characters = look_ahead_until_or_eof(chars.clone(), vec![';', '{'], character);
-                if look_ahead_characters.ends_with(";") {
-                    child_modules.push(current_identifier);
-                } else if mod_scope.is_none() {
-                    if character != '{' && advance_until_or_eof(&mut chars, '{') {
-                        character = '{';
-                    }
-                    mod_scope = Some((current_identifier, String::new(), scope_counter + 1));
-                }
-            } else if current_identifier_object_type.contains(&ObjectType::Impl) {
-                impl_scope = Some(scope_counter + 1);
-            } else if let Some(object_type) = current_identifier_object_type {
-                if impl_scope.is_none() && mod_scope.is_none() {
-                    if parse_use_stmt {
-                        // TODO: Support nested identifier, like a::{b, c::{d, e}}
-                        // Currently only a::b::{c, d} is supported
-                        let splits = current_identifier.split("{").collect::<Vec<&str>>();
-                        if splits.len() == 2 {
-                            for sub_module in splits[1].split(",") {
-                                let sub_module = sub_module.trim_end_matches("}").trim_start_matches("{").trim_start().trim_end();
-                                usable_objects.push(UsableObject::new(object_type.clone(), format!("{}{}", splits[0], sub_module)));
-                            }
-                        } else {
-                            usable_objects.push(UsableObject::new(object_type, current_identifier));
+fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<String> {
+    let mut obj_uses = Vec::new();
+    let mut current_path = String::new();
+    for path_child in syntax_node.children() {
+        match path_child.kind() {
+            SyntaxKind::PATH => {
+                for i_path_child in path_child.children() {
+                    match i_path_child.kind() {
+                        SyntaxKind::PATH => {
+                            current_path = i_path_child.to_string();
                         }
-                    } else {
-                        usable_objects.push(UsableObject::new(object_type, current_identifier));
+                        SyntaxKind::PATH_SEGMENT => {
+                            for p_segment_child in i_path_child.children() {
+                                match p_segment_child.kind() {
+                                    SyntaxKind::NAME_REF => {
+                                        if current_path.is_empty() {
+                                            obj_uses.push(p_segment_child.to_string());
+                                        } else {
+                                            obj_uses.push(format!("{}::{}", current_path, p_segment_child.to_string()));
+                                        }
+                                    }
+                                    SyntaxKind::GENERIC_ARG_LIST => {
+                                        for arg in p_segment_child.children() {
+                                            match arg.kind() {
+                                                SyntaxKind::TYPE_ARG => {
+                                                    for t_arg_child in arg.children() {
+                                                        match t_arg_child.kind() {
+                                                            SyntaxKind::TUPLE_TYPE => {
+                                                                for tup in t_arg_child.children() {
+                                                                    match tup.kind() {
+                                                                        SyntaxKind::PATH_TYPE => {
+                                                                            obj_uses.append(&mut parse_path_type(&tup));
+                                                                        }
+                                                                        _ => unimplemented!()
+                                                                    }
+                                                                }
+                                                            }
+                                                            SyntaxKind::PATH_TYPE => {
+                                                                obj_uses.append(&mut parse_path_type(&t_arg_child));
+                                                            }
+                                                            _ => continue
+                                                        }
+                                                    }
+                                                }
+                                                _ => continue
+                                            }
+                                        }
+                                    }
+                                    _ => continue
+                                }
+                            }
+                        }
+                        _ => continue
                     }
                 }
             }
-
-            current_identifier_object_type = None;
-            current_identifier = String::new();
-            parse_use_stmt = false;
+            _ => continue
         }
-
-        if begin_identifier_name && (character.is_alphanumeric() || character == '_' || character == ':'
-            || (parse_use_stmt && (character == '{' || character == '}' || character == ',' || character == ' '))) {
-            current_identifier += &character.to_string();
-        }
-
-        if character == '{' {
-            scope_counter += 1;
-        } else if character == '}' {
-            if let Some(impl_scope_counter) = impl_scope {
-                if impl_scope_counter == scope_counter {
-                    impl_scope = None;
-                }
-            }
-
-            if mod_scope.iter().any(|(_, _, scope)| *scope == scope_counter) {
-                let (module_name, mut pseudo_file, _) = mod_scope.unwrap();
-                pseudo_file.pop();
-                mod_pseudo_files.push((module_name, pseudo_file));
-                mod_scope = None;
-            }
-
-            scope_counter -= 1;
-        } else if character == ' ' {
-            if previous_characters.ends_with("mod") {
-                begin_identifier_name = true;
-                current_identifier_object_type = Some(ObjectType::Mod);
-            } else if previous_characters.ends_with("struct") {
-                begin_identifier_name = true;
-                current_identifier_object_type = Some(ObjectType::Struct);
-            } else if previous_characters.ends_with("enum") {
-                begin_identifier_name = true;
-                current_identifier_object_type = Some(ObjectType::Enum);
-            } else if previous_characters.ends_with("trait") {
-                begin_identifier_name = true;
-                current_identifier_object_type = Some(ObjectType::Trait);
-            } else if previous_characters.ends_with("fn") {
-                begin_identifier_name = true;
-                current_identifier_object_type = Some(ObjectType::Function);
-            } else if previous_characters.ends_with("impl") {
-                begin_identifier_name = true;
-                current_identifier_object_type = Some(ObjectType::Impl);
-            } else if previous_characters.ends_with("pub use") {
-                begin_identifier_name = true;
-                parse_use_stmt = true;
-                current_identifier_object_type = Some(ObjectType::RePublish);
-            } else if previous_characters.ends_with("use") {
-                begin_identifier_name = true;
-                parse_use_stmt = true;
-                current_identifier_object_type = Some(ObjectType::Use);
-            }
-        }
-
-        previous_characters += &character.to_string();
     }
 
-    let re_use2 = Regex::new(r"([a-zA-Z0-9_:]+::[a-zA-Z0-9_]+)+\(").unwrap();
-    for cap in re_use2.captures_iter(&contents) {
-        let capture = cap.get(1).unwrap().as_str().to_string();
-        usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, capture));
-    }
-
-    (child_modules, mod_pseudo_files, usable_objects)
+    return obj_uses;
 }
 
-fn look_ahead_until_or_eof(mut chars: Chars, until: Vec<char>, current_character: char) -> String {
-    let mut result = String::new();
-    result += &current_character.to_string();
-    while !until.iter().any(|until_char| result.ends_with(*until_char)) {
-        let next_char = chars.next();
-        if let Some(character) = next_char {
-            result += &character.to_string();
-        } else {
-            break;
+fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<String> {
+    let mut result = Vec::new();
+    for rfl_child in syntax_node.children() {
+        for rf_child in rfl_child.children() {
+            match rf_child.kind() {
+                SyntaxKind::PATH_TYPE => {
+                    result.append(&mut parse_path_type(&rf_child));
+                }
+                _ => continue
+            }
         }
     }
     result
 }
 
-fn advance_until_or_eof(chars: &mut Chars, until: char) -> bool {
-    loop {
-        let next_char = chars.next();
-        if let Some(character) = next_char {
-            if character == until {
-                return true;
+fn parse_assoc_func_item_list(syntax_node: &SyntaxNode) -> Vec<String> {
+    let mut result = Vec::new();
+    for arg in syntax_node.children() {
+        for func in arg.children() {
+            match func.kind() {
+                SyntaxKind::PARAM_LIST => {
+                    result.append(&mut parse_field_list(&func));
+                }
+                SyntaxKind::RET_TYPE => {
+                    for ret in func.children() {
+                        match ret.kind() {
+                            SyntaxKind::PATH_TYPE => {
+                                result.append(&mut parse_path_type(&ret));
+                            }
+                            _ => continue
+                        }
+                    }
+                }
+                _ => continue,
             }
-        } else {
-            break;
         }
     }
-    false
+    result
 }

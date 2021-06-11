@@ -19,10 +19,10 @@ mod analyzer;
 mod parser;
 
 fn main() {
-    let module_tree = ModuleTree::new("/home/shino/hacking/cyclic_dep_test/src/").unwrap();
+    let module_tree = ModuleTree::new("/home/shino/hacking/cyclic_dep_test/src/main.rs");
     let layer_names: HashSet<String> = hash_set!["dir_a", "dir_b", "dir_c", "dir_d"]
         .iter().map(|elem| elem.to_string()).collect();
-    let mut architecture = Architecture::new(layer_names.clone())
+    let architecture = Architecture::new(layer_names.clone())
         .with_access_rule(MayOnlyAccess::new(&layer_names, "dir_c", hash_set!["dir_c", "dir_d", "dir_b", "dir_a"]))
         //.with_access_rule(MayNotAccess::new(&layer_names, "dir_c", hash_set!["dir_d"]))
         .with_access_rule(NoParentAccess)

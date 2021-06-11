@@ -1,8 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use crate::analyzer::domain_values::RuleViolation;
 use crate::analyzer::services::AccessRule;
-use crate::analyzer::utils::assert_layer_exist;
 use crate::parser::materials::ModuleTree;
 
 pub struct Architecture {

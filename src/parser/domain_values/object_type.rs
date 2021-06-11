@@ -5,8 +5,6 @@ pub enum ObjectType {
     Enum,
     Function,
     Trait,
-    Mod,
-    Impl,
     RePublish,
     Use,
     ImplicitUse
