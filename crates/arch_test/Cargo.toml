@@ -5,3 +5,4 @@ edition = "2018"
 
 [dependencies]
 arch_test_core = { path = "../arch_test_core" }
+structopt = "0.3.21"
