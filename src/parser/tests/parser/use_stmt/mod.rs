@@ -39,3 +39,12 @@ fn nested() {
     assert_eq!(usable_objects[8].object_name, "a::v::x".to_owned());
     assert_eq!(usable_objects[9].object_name, "a::v::y::z".to_owned());
 }
+
+#[test]
+fn single_stmt() {
+    let mut node_tree = Vec::new();
+    let path = Path::new("src/parser/tests/parser/use_stmt/single_stmt.rs");
+    parse_main_or_mod_file_into_tree(&mut node_tree, path, 0, None, "WAMBO".to_owned());
+
+    assert_eq!(node_tree[0].usable_objects[0].object_name, "a".to_owned());
+}
