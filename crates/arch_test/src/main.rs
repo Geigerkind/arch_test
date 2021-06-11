@@ -1,33 +1,26 @@
 #[macro_use]
 extern crate structopt;
-
-use std::collections::HashSet;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 
 use structopt::StructOpt;
 
-use arch_test_core::{Architecture, ModuleTree};
-use arch_test_core::access_rules::{MayOnlyAccess, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess};
-use arch_test_core::hash_set;
+use arch_test_core::ModuleTree;
 
 use crate::domain_values::Options;
+use crate::services::parse_specification;
+use std::path::Path;
 
 mod domain_values;
+mod services;
 
 fn main() {
-    let opts = Options::from_args();
-
-
-    /*
-    let module_tree = ModuleTree::new("/home/shino/hacking/cyclic_dep_test/src/main.rs");
-    let layer_names: HashSet<String> = hash_set!["dir_a", "dir_b", "dir_c", "dir_d"]
-        .iter().map(|elem| elem.to_string()).collect();
-    let architecture = Architecture::new(layer_names.clone())
-        .with_access_rule(MayOnlyAccess::new(&layer_names, "dir_c", hash_set!["dir_c", "dir_d", "dir_b", "dir_a"]))
-        //.with_access_rule(MayNotAccess::new(&layer_names, "dir_c", hash_set!["dir_d"]))
-        .with_access_rule(NoParentAccess)
-        .with_access_rule(NoModuleCyclicDependencies)
-        .with_access_rule(NoLayerCyclicDependencies);
-    println!("Check Access Rules: {:?}", architecture.check_access_rules(&module_tree));
-    println!("Check missing layers: {:?}", architecture.check_complete_layer_specification(&module_tree));
-     */
+    let opts: Options = Options::from_args();
+    let specification = parse_specification(Path::new(&opts.specification));
+    if let Ok(architecture) = specification {
+        let module_tree = ModuleTree::new(opts.input.to_str().unwrap());
+        println!("{:?}", architecture.check_access_rules(&module_tree));
+    }
 }

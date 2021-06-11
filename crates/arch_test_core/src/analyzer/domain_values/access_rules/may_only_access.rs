@@ -8,12 +8,11 @@ pub struct MayOnlyAccess {
 }
 
 impl MayOnlyAccess {
-    pub fn new(layer_names: &HashSet<String>, accessor: &str, accessed_layers: HashSet<&str>) -> Self {
-        assert_layer_exist(layer_names, accessor);
-        let accessed = accessed_layers.into_iter().map(|layer| {
-            assert_layer_exist(layer_names, layer);
-            layer.to_owned()
-        }).collect::<HashSet<String>>();
-        MayOnlyAccess { accessor: accessor.to_owned(), accessed }
+    pub fn new(layer_names: &HashSet<String>, accessor: String, accessed_layers: HashSet<String>) -> Self {
+        assert_layer_exist(layer_names, &accessor);
+        accessed_layers.iter().for_each(|layer| {
+            assert_layer_exist(layer_names, &layer);
+        });
+        MayOnlyAccess { accessor, accessed: accessed_layers }
     }
 }
