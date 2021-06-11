@@ -28,4 +28,5 @@ fn main() {
         .with_access_rule(NoModuleCyclicDependencies)
         .with_access_rule(NoLayerCyclicDependencies);
     println!("Check Access Rules: {:?}", architecture.check_access_rules(&module_tree));
+    println!("Check missing layers: {:?}", architecture.check_complete_layer_specification(&module_tree));
 }

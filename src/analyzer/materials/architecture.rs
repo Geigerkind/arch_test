@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use crate::analyzer::domain_values::RuleViolation;
 use crate::analyzer::services::AccessRule;
+use crate::parser::entities::ModuleNode;
 use crate::parser::materials::ModuleTree;
 
 pub struct Architecture {
@@ -29,30 +30,12 @@ impl Architecture {
         Ok(())
     }
 
-    pub fn check_complete_layer_specification(&self, module_tree: &ModuleTree) {
-        unimplemented!()
+    pub fn check_complete_layer_specification(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
+        let tree: &Vec<ModuleNode> = module_tree.tree();
+        if tree.iter().any(|node| node.parent_index().is_some() && !self.layer_names.contains(node.module_name())
+            && !self.layer_names.contains(tree[node.parent_index().unwrap()].module_name())) {
+            return Err(RuleViolation);
+        }
+        Ok(())
     }
-
-    /*
-    pub fn add_access_rule_precedence(&mut self, accessor_layer: &str, accessed_layer: &str) {
-        let accessor = self.get_layer_index(accessor_layer);
-        let accessed = self.get_layer_index(accessed_layer);
-        let mut subject_rules = self.access_rules.entry(accessor).or_insert_with(Vec::new);
-        subject_rules.push(AccessRule::Precedence(accessed));
-    }
-
-    pub fn add_access_rule_may_access(&mut self, accessor_layer: &str, accessed_layers: HashSet<&str>) {
-        let accessor = self.get_layer_index(accessor_layer);
-        let accessed_layers = accessed_layers.into_iter().map(|layer| self.get_layer_index(layer)).collect::<HashSet<usize>>();
-        let mut subject_rules = self.access_rules.entry(accessor).or_insert_with(Vec::new);
-        subject_rules.push(AccessRule::MayAccess(accessed_layers));
-    }
-
-    pub fn add_access_rule_may_not_access(&mut self, accessor_layer: &str, not_accessed_layers: HashSet<&str>) {
-        let accessor = self.get_layer_index(accessor_layer);
-        let not_accessed_layers = not_accessed_layers.into_iter().map(|layer| self.get_layer_index(layer)).collect::<HashSet<usize>>();
-        let mut subject_rules = self.access_rules.entry(accessor).or_insert_with(Vec::new);
-        subject_rules.push(AccessRule::MayNotAccess(not_accessed_layers));
-    }
-     */
 }
