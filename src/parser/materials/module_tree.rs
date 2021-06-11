@@ -35,7 +35,7 @@ impl ModuleTree {
         let mut module_references: Vec<(usize, String)> = Vec::new();
 
         let result = SourceFile::parse(&read_file_content(file_path));
-        self.parse_syntax_node_tree(result.syntax_node().children(), level, parent_index, module_name, &mut module_references);
+        self.parse_syntax_node_tree(result.syntax_node().children(), file_path.to_str().unwrap().to_string(), level, parent_index, module_name, &mut module_references);
 
         let dir_entries: Vec<DirEntry> = file_path.parent().unwrap().read_dir().unwrap().filter_map(|entry| entry.ok()).collect();
         for (parent_index, sub_module) in module_references {
@@ -50,8 +50,8 @@ impl ModuleTree {
         }
     }
 
-    fn parse_syntax_node_tree(&mut self, syntax_node_children: SyntaxNodeChildren, level: usize, parent_index: Option<usize>, module_name: String, module_references: &mut Vec<(usize, String)>) {
-        self.tree.push(ModuleNode::new("TODO".to_owned(), level, parent_index, module_name));
+    fn parse_syntax_node_tree(&mut self, syntax_node_children: SyntaxNodeChildren, file_path: String, level: usize, parent_index: Option<usize>, module_name: String, module_references: &mut Vec<(usize, String)>) {
+        self.tree.push(ModuleNode::new(file_path.clone(), level, parent_index, module_name));
         let current_index = self.tree.len() - 1;
         if let Some(parent_index) = parent_index {
             self.tree.get_mut(parent_index).unwrap().register_child(current_index);
@@ -59,7 +59,7 @@ impl ModuleTree {
 
         for item in syntax_node_children {
             if let Some((inner_module_start_node, inner_module_name)) = parse_file_rec(&item, module_references, &mut self.tree.last_mut().unwrap().usable_objects, current_index) {
-                self.parse_syntax_node_tree(inner_module_start_node, level + 1, Some(current_index), inner_module_name, module_references);
+                self.parse_syntax_node_tree(inner_module_start_node, file_path.clone(), level + 1, Some(current_index), inner_module_name, module_references);
             }
         }
     }
