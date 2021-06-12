@@ -309,7 +309,7 @@ fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<String> {
 fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<String> {
     let mut result = Vec::new();
     match syntax_node.kind() {
-        SyntaxKind::NAME => {
+        SyntaxKind::NAME | SyntaxKind::IDENT_PAT => {
             return result;
         }
         SyntaxKind::TUPLE_TYPE | SyntaxKind::PAREN_TYPE => {
