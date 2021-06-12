@@ -1,7 +1,7 @@
 use std::fs::DirEntry;
 use std::path::Path;
 
-use syntax::{SourceFile, SyntaxKind, SyntaxNode, SyntaxNodeChildren};
+use syntax::{SourceFile, SyntaxKind, SyntaxNode, SyntaxNodeChildren, TextRange, TextSize};
 
 use crate::parser::domain_values::{ObjectType, UsableObject};
 use crate::parser::entities::ModuleNode;
@@ -48,19 +48,19 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
     match syntax_node.kind() {
         SyntaxKind::USE => {
             let (is_pub, paths) = parse_use_paths(syntax_node);
-            for path in paths {
-                usable_objects.push(UsableObject::new(if is_pub { ObjectType::RePublish } else { ObjectType::Use }, path));
+            for (path, text_range) in paths {
+                usable_objects.push(UsableObject::new(if is_pub { ObjectType::RePublish } else { ObjectType::Use }, path, text_range));
             }
         }
         SyntaxKind::STRUCT => {
             for child in syntax_node.children() {
                 match child.kind() {
                     SyntaxKind::NAME => {
-                        usable_objects.push(UsableObject::new(ObjectType::Struct, child.to_string()));
+                        usable_objects.push(UsableObject::new(ObjectType::Struct, child.to_string(), child.text_range()));
                     }
                     SyntaxKind::RECORD_FIELD_LIST => {
-                        for impl_use_path in parse_field_list(&child) {
-                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        for (impl_use_path, text_range) in parse_field_list(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
                         }
                     }
                     _ => {
@@ -73,15 +73,15 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
             for child in syntax_node.children() {
                 match child.kind() {
                     SyntaxKind::NAME => {
-                        usable_objects.push(UsableObject::new(ObjectType::Enum, child.to_string()));
+                        usable_objects.push(UsableObject::new(ObjectType::Enum, child.to_string(), child.text_range()));
                     }
                     SyntaxKind::VARIANT_LIST => {
                         for variant in child.children() {
                             for arg in variant.children() {
                                 match arg.kind() {
                                     SyntaxKind::TUPLE_FIELD_LIST | SyntaxKind::RECORD_FIELD_LIST => {
-                                        for impl_use_path in parse_field_list(&arg) {
-                                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                                        for (impl_use_path, text_range) in parse_field_list(&arg) {
+                                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
                                         }
                                     }
                                     _ => continue
@@ -97,19 +97,19 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
             for child in syntax_node.children() {
                 match child.kind() {
                     SyntaxKind::NAME => {
-                        usable_objects.push(UsableObject::new(ObjectType::Function, child.to_string()));
+                        usable_objects.push(UsableObject::new(ObjectType::Function, child.to_string(), child.text_range()));
                     }
                     SyntaxKind::PARAM_LIST => {
-                        for impl_use_path in parse_field_list(&child) {
-                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        for (impl_use_path, text_range) in parse_field_list(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
                         }
                     }
                     SyntaxKind::RET_TYPE => {
                         for ret in child.children() {
                             match ret.kind() {
                                 SyntaxKind::PATH_TYPE => {
-                                    for impl_use_path in parse_path_type(&ret) {
-                                        usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                                    for (impl_use_path, text_range) in parse_path_type(&ret) {
+                                        usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
                                     }
                                 }
                                 _ => continue
@@ -126,19 +126,19 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
             }
         }
         SyntaxKind::PATH_EXPR | SyntaxKind::TUPLE_STRUCT_PAT => {
-            for impl_use_path in parse_path_type(&syntax_node) {
-                usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+            for (impl_use_path, text_range) in parse_path_type(&syntax_node) {
+                usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
             }
         }
         SyntaxKind::TRAIT => {
             for child in syntax_node.children() {
                 match child.kind() {
                     SyntaxKind::NAME => {
-                        usable_objects.push(UsableObject::new(ObjectType::Trait, child.to_string()));
+                        usable_objects.push(UsableObject::new(ObjectType::Trait, child.to_string(), child.text_range()));
                     }
                     SyntaxKind::ASSOC_ITEM_LIST => {
-                        for impl_use_path in parse_assoc_func_item_list(&child) {
-                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        for (impl_use_path, text_range) in parse_assoc_func_item_list(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
                         }
                     }
                     _ => continue
@@ -149,14 +149,14 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
             for child in syntax_node.children() {
                 match child.kind() {
                     SyntaxKind::PATH_TYPE => {
-                        for impl_use_path in parse_path_type(&child) {
-                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        for (impl_use_path, text_range) in parse_path_type(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
                         }
                     }
                     SyntaxKind::ASSOC_ITEM_LIST => {
                         // TODO: Properly handle assoc list for trait impl
-                        for impl_use_path in parse_assoc_func_item_list(&child) {
-                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+                        for (impl_use_path, text_range) in parse_assoc_func_item_list(&child) {
+                            usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
                         }
                     }
                     _ => continue
@@ -177,13 +177,13 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
             }
         }
         SyntaxKind::PARAM_LIST => {
-            for impl_use_path in parse_field_list(&syntax_node) {
-                usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+            for (impl_use_path, text_range) in parse_field_list(&syntax_node) {
+                usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
             }
         }
         SyntaxKind::TUPLE_TYPE | SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_PAT => {
-            for impl_use_path in parse_nested_tuple_type(&syntax_node) {
-                usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+            for (impl_use_path, text_range) in parse_nested_tuple_type(&syntax_node) {
+                usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path, text_range));
             }
         }
         SyntaxKind::MATCH_EXPR => {
@@ -254,7 +254,7 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
     None
 }
 
-fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<String>) {
+fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<(String, TextRange)>) {
     let mut visibility = false;
     let mut paths = Vec::new();
     for child in syntax_node.children() {
@@ -271,18 +271,20 @@ fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<String>) {
     (visibility, paths)
 }
 
-fn parse_use_tree(syntax_node: &SyntaxNode) -> Vec<String> {
+fn parse_use_tree(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
     let mut path_segments = Vec::new();
     let mut current_prefix = String::new();
+    let mut current_text_range = TextRange::empty(TextSize::default());
     for sub_child in syntax_node.children() {
         match sub_child.kind() {
             SyntaxKind::PATH => {
                 current_prefix = sub_child.to_string();
+                current_text_range = sub_child.text_range();
             }
             SyntaxKind::USE_TREE_LIST => {
                 for use_tree in sub_child.children() {
-                    for segment in parse_use_tree(&use_tree) {
-                        path_segments.push(format!("{}::{}", current_prefix, segment));
+                    for (segment, _) in parse_use_tree(&use_tree) {
+                        path_segments.push((format!("{}::{}", current_prefix, segment), sub_child.text_range()));
                     }
                 }
             }
@@ -290,12 +292,12 @@ fn parse_use_tree(syntax_node: &SyntaxNode) -> Vec<String> {
         }
     }
     if path_segments.is_empty() {
-        return vec![current_prefix];
+        return vec![(current_prefix, current_text_range)];
     }
     path_segments
 }
 
-fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<String> {
+fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
     let mut obj_uses = Vec::new();
     let mut current_path = String::new();
     for path_child in syntax_node.children() {
@@ -311,9 +313,9 @@ fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<String> {
                                 match p_segment_child.kind() {
                                     SyntaxKind::NAME_REF => {
                                         if current_path.is_empty() {
-                                            obj_uses.push(p_segment_child.to_string());
+                                            obj_uses.push((p_segment_child.to_string(), p_segment_child.text_range()));
                                         } else {
-                                            obj_uses.push(format!("{}::{}", current_path, p_segment_child.to_string()));
+                                            obj_uses.push((format!("{}::{}", current_path, p_segment_child.to_string()), p_segment_child.text_range()));
                                         }
                                     }
                                     SyntaxKind::GENERIC_ARG_LIST => {
@@ -348,7 +350,7 @@ fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<String> {
     return obj_uses;
 }
 
-fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<String> {
+fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
     let mut result = Vec::new();
     for rfl_child in syntax_node.children() {
         for rf_child in rfl_child.children() {
@@ -358,7 +360,7 @@ fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<String> {
     result
 }
 
-fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<String> {
+fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
     let mut result = Vec::new();
     match syntax_node.kind() {
         SyntaxKind::NAME | SyntaxKind::IDENT_PAT | SyntaxKind::WILDCARD_PAT | SyntaxKind::LIFETIME | SyntaxKind::VISIBILITY | SyntaxKind::ATTR => {
@@ -380,7 +382,7 @@ fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<String> {
     result
 }
 
-fn parse_assoc_func_item_list(syntax_node: &SyntaxNode) -> Vec<String> {
+fn parse_assoc_func_item_list(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
     let mut result = Vec::new();
     for arg in syntax_node.children() {
         for func in arg.children() {
