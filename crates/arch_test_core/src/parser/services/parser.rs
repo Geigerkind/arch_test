@@ -259,18 +259,8 @@ fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<String> {
                                                 SyntaxKind::TYPE_ARG => {
                                                     for t_arg_child in arg.children() {
                                                         match t_arg_child.kind() {
-                                                            SyntaxKind::TUPLE_TYPE => {
-                                                                for tup in t_arg_child.children() {
-                                                                    match tup.kind() {
-                                                                        SyntaxKind::PATH_TYPE => {
-                                                                            obj_uses.append(&mut parse_path_type(&tup));
-                                                                        }
-                                                                        _ => unimplemented!()
-                                                                    }
-                                                                }
-                                                            }
-                                                            SyntaxKind::PATH_TYPE => {
-                                                                obj_uses.append(&mut parse_path_type(&t_arg_child));
+                                                            SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_TYPE => {
+                                                                obj_uses.append(&mut parse_nested_tuple_type(&t_arg_child));
                                                             }
                                                             _ => continue
                                                         }
@@ -299,13 +289,27 @@ fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<String> {
     let mut result = Vec::new();
     for rfl_child in syntax_node.children() {
         for rf_child in rfl_child.children() {
-            match rf_child.kind() {
-                SyntaxKind::PATH_TYPE => {
-                    result.append(&mut parse_path_type(&rf_child));
-                }
-                _ => continue
+            result.append(&mut parse_nested_tuple_type(&rf_child));
+        }
+    }
+    result
+}
+
+fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<String> {
+    let mut result = Vec::new();
+    match syntax_node.kind() {
+        SyntaxKind::NAME => {
+            return result;
+        }
+        SyntaxKind::TUPLE_TYPE => {
+            for child in syntax_node.children() {
+                result.append(&mut parse_nested_tuple_type(&child));
             }
         }
+        SyntaxKind::PATH_TYPE => {
+            result.append(&mut parse_path_type(&syntax_node));
+        }
+        _ => unreachable!()
     }
     result
 }
