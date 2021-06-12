@@ -58,17 +58,17 @@ fn object_uses_with_children() {
     let node3_object_uses = tree[2].use_relations(tree, use_map, true);
     let node4_object_uses = tree[3].use_relations(tree, use_map, true);
 
-    assert_eq!(node1_object_uses.iter().count(), 7);
+    assert_eq!(node1_object_uses.iter().count(), 4);
     assert_eq!(node1_object_uses.iter().filter(|use_relation| use_relation.used_object().node_index() == &2 && use_relation.used_object().full_module_path() == "crate::republish::wambo::WAMBO"
-        && use_relation.using_object().object_name() == "crate::republish::wambo::WAMBO").count(), 4);
+        && use_relation.using_object().object_name() == "crate::republish::wambo::WAMBO").count(), 2);
     assert_eq!(node1_object_uses.iter().filter(|use_relation| use_relation.used_object().node_index() == &3 && use_relation.used_object().full_module_path() == "crate::republish::testo::TESTO"
-        && use_relation.using_object().object_name() == "crate::republish::testo::TESTO").count(), 3);
+        && use_relation.using_object().object_name() == "crate::republish::testo::TESTO").count(), 2);
 
-    assert_eq!(node2_object_uses.iter().count(), 6);
+    assert_eq!(node2_object_uses.iter().count(), 4);
     assert_eq!(node2_object_uses.iter().filter(|use_relation| use_relation.used_object().node_index() == &2 && use_relation.used_object().full_module_path() == "crate::republish::wambo::WAMBO"
-        && use_relation.using_object().object_name() == "crate::republish::wambo::WAMBO").count(), 3);
+        && use_relation.using_object().object_name() == "crate::republish::wambo::WAMBO").count(), 2);
     assert_eq!(node2_object_uses.iter().filter(|use_relation| use_relation.used_object().node_index() == &3 && use_relation.used_object().full_module_path() == "crate::republish::testo::TESTO"
-        && use_relation.using_object().object_name() == "crate::republish::testo::TESTO").count(), 3);
+        && use_relation.using_object().object_name() == "crate::republish::testo::TESTO").count(), 2);
 
     assert_eq!(node3_object_uses.iter().count(), 0);
     assert_eq!(node4_object_uses.iter().count(), 0);
@@ -89,11 +89,11 @@ fn object_uses_without_children() {
     assert!(node1_object_uses.iter().any(|use_relation| use_relation.used_object().node_index() == &2 && use_relation.used_object().full_module_path() == "crate::republish::wambo::WAMBO"
         && use_relation.using_object().object_name() == "crate::republish::wambo::WAMBO"));
 
-    assert_eq!(node2_object_uses.iter().count(), 6);
+    assert_eq!(node2_object_uses.iter().count(), 4);
     assert_eq!(node2_object_uses.iter().filter(|use_relation| use_relation.used_object().node_index() == &2 && use_relation.used_object().full_module_path() == "crate::republish::wambo::WAMBO"
-        && use_relation.using_object().object_name() == "crate::republish::wambo::WAMBO").count(), 3);
+        && use_relation.using_object().object_name() == "crate::republish::wambo::WAMBO").count(), 2);
     assert_eq!(node2_object_uses.iter().filter(|use_relation| use_relation.used_object().node_index() == &3 && use_relation.used_object().full_module_path() == "crate::republish::testo::TESTO"
-        && use_relation.using_object().object_name() == "crate::republish::testo::TESTO").count(), 3);
+        && use_relation.using_object().object_name() == "crate::republish::testo::TESTO").count(), 2);
 
     assert_eq!(node3_object_uses.iter().count(), 0);
     assert_eq!(node4_object_uses.iter().count(), 0);
