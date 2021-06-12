@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
-use crate::analyzer::domain_values::RuleViolation;
+use crate::analyzer::domain_values::RuleViolationType;
+use crate::analyzer::entities::RuleViolation;
 use crate::analyzer::services::AccessRule;
 use crate::parser::entities::ModuleNode;
 use crate::parser::materials::ModuleTree;
@@ -34,7 +35,7 @@ impl Architecture {
         let tree: &Vec<ModuleNode> = module_tree.tree();
         if tree.iter().any(|node| node.parent_index().is_some() && !self.layer_names.contains(node.module_name())
             && !self.layer_names.contains(tree[node.parent_index().unwrap()].module_name())) {
-            return Err(RuleViolation);
+            return Err(RuleViolation::new(RuleViolationType::IncompleteLayerSpecification, Box::new(()), vec![]));
         }
         Ok(())
     }

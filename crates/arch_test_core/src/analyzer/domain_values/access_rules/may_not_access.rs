@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::analyzer::utils::assert_layer_exist;
 
-#[derive(Debug, Getters)]
+#[derive(Debug, Getters, Clone)]
 pub struct MayNotAccess {
     accessor: String,
     accessed: HashSet<String>,

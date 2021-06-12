@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::parser::domain_values::{ObjectType, ObjectUse, UsableObject};
+use crate::parser::domain_values::{ObjectType, ObjectUse, UsableObject, UseRelation};
 
 #[derive(Debug, Clone, Getters)]
 pub struct ModuleNode {
@@ -28,12 +28,12 @@ impl ModuleNode {
         self.children.push(child_index)
     }
 
-    pub fn object_uses(&self, tree: &Vec<Self>, possible_use_map: &HashMap<String, ObjectUse>, include_children: bool) -> HashSet<ObjectUse> {
+    pub fn object_uses(&self, tree: &Vec<Self>, possible_use_map: &HashMap<String, ObjectUse>, include_children: bool) -> HashSet<UseRelation> {
         let mut obj_uses = HashSet::new();
         for obj in self.usable_objects.iter().filter(|obj| obj.object_type() == &ObjectType::RePublish
             || obj.object_type() == &ObjectType::Use || obj.object_type() == &ObjectType::ImplicitUse) {
             if let Some(obj_use) = possible_use_map.get(&obj.object_name) {
-                obj_uses.insert(obj_use.clone());
+                obj_uses.insert(UseRelation::new(obj.clone(), obj_use.clone()));
             }
         }
 

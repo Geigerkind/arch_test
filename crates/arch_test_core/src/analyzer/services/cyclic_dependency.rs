@@ -1,50 +1,59 @@
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
+use crate::parser::domain_values::UseRelation;
 use crate::parser::materials::ModuleTree;
-use crate::parser::domain_values::ObjectUse;
 
-
-pub fn contains_cyclic_dependency(module_tree: &ModuleTree) -> bool {
-    module_tree.tree().iter().enumerate().any(|(index, node)| {
-        // TODO: Not enough to just use node 0?
-        node.object_uses(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|obj_use| *obj_use.node_index() != index)
-            .any(|obj_use| {
-                let mut visited_nodes = BTreeSet::new();
-                visited_nodes.insert(0);
-                find_traverse(&mut visited_nodes, *obj_use.node_index(), module_tree)
-            })
-    })
+pub fn contains_cyclic_dependency(module_tree: &ModuleTree) -> Option<Vec<(usize, UseRelation)>> {
+    let mut visited_nodes: Vec<(usize, UseRelation)> = Vec::new();
+    for (index, node) in module_tree.tree().iter().enumerate() {
+        if node.object_uses(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|use_relation| *use_relation.used_object().node_index() != index)
+            .any(|use_relation| {
+                visited_nodes.clear();
+                visited_nodes.push((index, use_relation.clone()));
+                find_traverse(&mut visited_nodes, *use_relation.used_object().node_index(), module_tree)
+            }) {
+            let last_index = visited_nodes.last().cloned().unwrap();
+            let mut result = vec![last_index.clone()];
+            for (index, node) in visited_nodes.into_iter().rev().skip(1) {
+                result.push((index, node));
+                if index == last_index.0 {
+                    break;
+                }
+            }
+            return Some(result);
+        }
+    }
+    None
 }
 
-fn find_traverse(visited_nodes: &mut BTreeSet<usize>, current_index: usize, module_tree: &ModuleTree) -> bool {
-    if visited_nodes.contains(&current_index) {
+fn find_traverse(visited_nodes: &mut Vec<(usize, UseRelation)>, current_index: usize, module_tree: &ModuleTree) -> bool {
+    if visited_nodes.iter().any(|(index, _)| *index == current_index) {
         return true;
     }
-    visited_nodes.insert(current_index);
-    for obj_use in module_tree.tree()[current_index].object_uses(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|obj_use| *obj_use.node_index() != current_index) {
-        if find_traverse(visited_nodes, *obj_use.node_index(), module_tree) {
+    for use_relation in module_tree.tree()[current_index].object_uses(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|use_relation| *use_relation.used_object().node_index() != current_index) {
+        visited_nodes.push((current_index, use_relation.clone()));
+        if find_traverse(visited_nodes, *use_relation.used_object().node_index(), module_tree) {
             return true;
         }
-        visited_nodes.remove(obj_use.node_index());
+        visited_nodes.pop();
     }
-    visited_nodes.remove(&current_index);
     false
 }
 
-pub fn contains_cyclic_dependency_on_any_level(module_tree: &ModuleTree) -> bool {
+pub fn contains_cyclic_dependency_on_any_level(module_tree: &ModuleTree) -> Option<Vec<(usize, UseRelation)>> {
     let mut current_level = 1;
     while module_tree.tree().iter().any(|node| *node.level() == current_level) {
-        if contains_cyclic_dependency_on_level(module_tree, current_level) {
-            return true;
+        if let Some(involved) = contains_cyclic_dependency_on_level(module_tree, current_level) {
+            return Some(involved);
         }
         current_level += 1;
     }
-    false
+    None
 }
 
-pub fn contains_cyclic_dependency_on_level(module_tree: &ModuleTree, level: usize) -> bool {
+pub fn contains_cyclic_dependency_on_level(module_tree: &ModuleTree, level: usize) -> Option<Vec<(usize, UseRelation)>> {
     let mut node_mapping = HashMap::new();
-    let mut obj_uses_per_level = HashMap::new();
+    let mut use_relations_per_level = HashMap::new();
     let current_tree = module_tree.tree();
 
     current_tree.iter().enumerate().filter(|(_, node)| *node.level() == level).for_each(|(index, node)| {
@@ -53,32 +62,43 @@ pub fn contains_cyclic_dependency_on_level(module_tree: &ModuleTree, level: usiz
         for node_index in included_nodes.iter() {
             node_mapping.insert(*node_index, index);
         }
-        let level_uses: Vec<ObjectUse> = node.object_uses(current_tree, module_tree.possible_uses(), true)
-            .into_iter().filter(|obj_use| !included_nodes.contains(obj_use.node_index()) && *obj_use.node_index() != index).collect();
-        obj_uses_per_level.insert(index, level_uses);
+        let level_uses: Vec<UseRelation> = node.object_uses(current_tree, module_tree.possible_uses(), true)
+            .into_iter().filter(|use_relation| !included_nodes.contains(use_relation.used_object().node_index()) && *use_relation.used_object().node_index() != index).collect();
+        use_relations_per_level.insert(index, level_uses);
     });
 
-    obj_uses_per_level.iter().any(|(index, obj_uses)| {
-        obj_uses.iter().filter(|obj_use| node_mapping.contains_key(obj_use.node_index())).any(|obj_use| {
-            let mut visited_nodes = BTreeSet::new();
-            visited_nodes.insert(*index);
-            find_traverse_on_level(&mut visited_nodes, *node_mapping.get(obj_use.node_index()).unwrap(), &node_mapping, &obj_uses_per_level)
-        })
-    })
+    let mut visited_nodes: Vec<(usize, UseRelation)> = Vec::new();
+    for (index, use_relations) in use_relations_per_level.iter() {
+        if use_relations.iter().filter(|use_relation| node_mapping.contains_key(use_relation.used_object().node_index())).any(|use_relation| {
+            visited_nodes.clear();
+            visited_nodes.push((*index, use_relation.clone()));
+            find_traverse_on_level(&mut visited_nodes, *node_mapping.get(use_relation.used_object().node_index()).unwrap(), &node_mapping, &use_relations_per_level)
+        }) {
+            let last_index = visited_nodes.last().cloned().unwrap();
+            let mut result = vec![last_index.clone()];
+            for (index, node) in visited_nodes.into_iter().rev().skip(1) {
+                result.push((index, node));
+                if index == last_index.0 {
+                    break;
+                }
+            }
+            return Some(result);
+        }
+    }
+    None
 }
 
-fn find_traverse_on_level(visited_nodes: &mut BTreeSet<usize>, current_index: usize, node_mapping: &HashMap<usize, usize>, obj_uses_per_level: &HashMap<usize, Vec<ObjectUse>>) -> bool {
-    if visited_nodes.contains(&current_index) {
+fn find_traverse_on_level(visited_nodes: &mut Vec<(usize, UseRelation)>, current_index: usize, node_mapping: &HashMap<usize, usize>, use_relations_per_level: &HashMap<usize, Vec<UseRelation>>) -> bool {
+    if visited_nodes.iter().any(|(index, _)| *index == current_index) {
         return true;
     }
-    visited_nodes.insert(current_index);
-    for obj_use in obj_uses_per_level.get(&current_index).unwrap().iter() {
-        let obj_use_index = *node_mapping.get(obj_use.node_index()).unwrap();
-        if find_traverse_on_level(visited_nodes, obj_use_index, node_mapping, obj_uses_per_level) {
+    for use_relation in use_relations_per_level.get(&current_index).unwrap().iter() {
+        let use_relation_index = *node_mapping.get(use_relation.used_object().node_index()).unwrap();
+        visited_nodes.push((current_index, use_relation.clone()));
+        if find_traverse_on_level(visited_nodes, use_relation_index, node_mapping, use_relations_per_level) {
             return true;
         }
-        visited_nodes.remove(&obj_use_index);
+        visited_nodes.pop();
     }
-    visited_nodes.remove(&current_index);
     false
 }

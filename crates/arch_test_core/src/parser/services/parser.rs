@@ -238,6 +238,7 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
         SyntaxKind::WHILE_EXPR |
         SyntaxKind::RETURN_EXPR |
         SyntaxKind::INDEX_EXPR |
+        SyntaxKind::CAST_EXPR |
         SyntaxKind::TRY_EXPR |
         SyntaxKind::CONDITION |
         SyntaxKind::ARG_LIST |
