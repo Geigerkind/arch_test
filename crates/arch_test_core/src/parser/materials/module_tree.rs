@@ -16,11 +16,15 @@ impl ModuleTree {
         let path = Path::new(root_directory);
         assert!(path.exists(), "Expecting a valid path");
         assert!(path.is_file(), "Expecting path to be a file!");
-        assert!(path.file_name().and_then(|os_str| os_str.to_str()).contains(&"main.rs"), "Expecting file to be main.rs");
+        let file_name = path.file_name().and_then(|os_str| os_str.to_str());
+        let module_name = if file_name.contains(&"main.rs") || file_name.contains(&"lib.rs") {
+            "crate".to_owned()
+        } else {
+            path.file_name().and_then(|os_str| os_str.to_str()).unwrap().trim_end_matches(".rs").to_owned()
+        };
 
         let mut module_tree = ModuleTree { tree: vec![], possible_uses: HashMap::default() };
-        // TODO: Module name if not crate
-        parse_main_or_mod_file_into_tree(&mut module_tree.tree, path, 0, None, "crate".to_owned());
+        parse_main_or_mod_file_into_tree(&mut module_tree.tree, path, 0, None, module_name);
         module_tree.correct_fully_qualified_names();
         module_tree.correct_republish_paths();
         module_tree.construct_possible_use_map();

@@ -125,19 +125,7 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
                 }
             }
         }
-        SyntaxKind::BLOCK_EXPR |
-        SyntaxKind::LET_STMT |
-        SyntaxKind::BIN_EXPR |
-        SyntaxKind::TUPLE_EXPR |
-        SyntaxKind::PAREN_EXPR |
-        SyntaxKind::CALL_EXPR |
-        SyntaxKind::ARG_LIST |
-        SyntaxKind::EXPR_STMT => {
-            for child in syntax_node.children() {
-                parse_file_rec(&child, module_references, usable_objects, current_index);
-            }
-        }
-        SyntaxKind::PATH_EXPR => {
+        SyntaxKind::PATH_EXPR | SyntaxKind::TUPLE_STRUCT_PAT => {
             for impl_use_path in parse_path_type(&syntax_node) {
                 usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
             }
@@ -188,16 +176,77 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
                 }
             }
         }
-        SyntaxKind::TUPLE_TYPE | SyntaxKind::PATH_TYPE => {
+        SyntaxKind::PARAM_LIST => {
+            for impl_use_path in parse_field_list(&syntax_node) {
+                usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+            }
+        }
+        SyntaxKind::TUPLE_TYPE | SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_PAT => {
             for impl_use_path in parse_nested_tuple_type(&syntax_node) {
                 usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
             }
         }
-        SyntaxKind::IDENT_PAT | SyntaxKind::LITERAL => {
+        SyntaxKind::MATCH_EXPR => {
+            for child in syntax_node.children() {
+                match child.kind() {
+                    SyntaxKind::MATCH_ARM_LIST => {
+                        for match_arm in child.children() {
+                            for arm_item in match_arm.children() {
+                                match arm_item.kind() {
+                                    SyntaxKind::PATH_PAT | SyntaxKind::WILDCARD_PAT | SyntaxKind::OR_PAT => {
+                                        // We wont need those special cases
+                                        continue;
+                                    }
+                                    _ => {
+                                        parse_file_rec(&arm_item, module_references, usable_objects, current_index);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    _ => continue
+                }
+            }
+        }
+        SyntaxKind::IDENT_PAT | SyntaxKind::LITERAL | SyntaxKind::EXTERN_CRATE | SyntaxKind::CONTINUE_EXPR | SyntaxKind::BREAK_EXPR => {
             return None;
         }
+        SyntaxKind::MACRO_CALL => {
+            // TODO: Handle properly
+            return None;
+        }
+        SyntaxKind::ATTR => {
+            // TODO: Path Attribute!
+            return None;
+        }
+        SyntaxKind::NAME_REF |
+        SyntaxKind::REF_TYPE |
+        SyntaxKind::RANGE_EXPR |
+        SyntaxKind::FIELD_EXPR |
+        SyntaxKind::BLOCK_EXPR |
+        SyntaxKind::LET_STMT |
+        SyntaxKind::BIN_EXPR |
+        SyntaxKind::TUPLE_EXPR |
+        SyntaxKind::PAREN_EXPR |
+        SyntaxKind::METHOD_CALL_EXPR |
+        SyntaxKind::CALL_EXPR |
+        SyntaxKind::CLOSURE_EXPR |
+        SyntaxKind::PREFIX_EXPR |
+        SyntaxKind::REF_EXPR |
+        SyntaxKind::IF_EXPR |
+        SyntaxKind::FOR_EXPR |
+        SyntaxKind::WHILE_EXPR |
+        SyntaxKind::RETURN_EXPR |
+        SyntaxKind::INDEX_EXPR |
+        SyntaxKind::CONDITION |
+        SyntaxKind::ARG_LIST |
+        SyntaxKind::EXPR_STMT => {
+            for child in syntax_node.children() {
+                parse_file_rec(&child, module_references, usable_objects, current_index);
+            }
+        }
         _ => {
-            println!("UNHANDLED EXPRESSION: {:?}", syntax_node);
+            println!("UNHANDLED EXPRESSION: {:?} => {}", syntax_node, syntax_node.to_string());
             return None;
         }
     }
@@ -311,10 +360,10 @@ fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<String> {
 fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<String> {
     let mut result = Vec::new();
     match syntax_node.kind() {
-        SyntaxKind::NAME | SyntaxKind::IDENT_PAT => {
+        SyntaxKind::NAME | SyntaxKind::IDENT_PAT | SyntaxKind::WILDCARD_PAT | SyntaxKind::LIFETIME | SyntaxKind::VISIBILITY => {
             return result;
         }
-        SyntaxKind::TUPLE_TYPE | SyntaxKind::PAREN_TYPE => {
+        SyntaxKind::TUPLE_TYPE | SyntaxKind::PAREN_TYPE | SyntaxKind::REF_TYPE | SyntaxKind::TUPLE_PAT | SyntaxKind::IMPL_TRAIT_TYPE | SyntaxKind::TYPE_BOUND_LIST | SyntaxKind::TYPE_BOUND => {
             for child in syntax_node.children() {
                 result.append(&mut parse_nested_tuple_type(&child));
             }
@@ -322,7 +371,10 @@ fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<String> {
         SyntaxKind::PATH_TYPE => {
             result.append(&mut parse_path_type(&syntax_node));
         }
-        _ => unreachable!()
+        _ => {
+            println!("{:?} => {}", syntax_node, syntax_node.to_string());
+            unreachable!()
+        }
     }
     result
 }

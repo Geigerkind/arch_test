@@ -1,7 +1,7 @@
 use velcro::hash_set;
 
 use crate::{Architecture, ModuleTree};
-use crate::analyzer::domain_values::access_rules::{NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess, MayOnlyAccess, MayNotAccess};
+use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess};
 
 #[test]
 fn no_parent_access() {
@@ -52,4 +52,22 @@ fn may_not_access() {
         .with_access_rule(MayNotAccess::new(&layer_names, "file_1".to_owned(), hash_set!["file_2".to_owned()]));
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+}
+
+#[test]
+fn myself() {
+    let layer_names = hash_set!["analyzer".to_owned(), "parser".to_owned(), "domain_values".to_owned(), "entities".to_owned(), "materials".to_owned(), "services".to_owned(), "tests".to_owned(), "utils".to_owned()];
+    let architecture = Architecture::new(layer_names.clone())
+        .with_access_rule(NoParentAccess)
+        .with_access_rule(NoModuleCyclicDependencies)
+        .with_access_rule(NoLayerCyclicDependencies)
+        .with_access_rule(MayNotAccess::new(&layer_names, "parser".to_owned(), hash_set!["analyzer".to_owned()]))
+        .with_access_rule(MayOnlyAccess::new(&layer_names, "analyzer".to_owned(), hash_set!["analyzer".to_owned(), "parser".to_owned()]))
+        .with_access_rule(MayOnlyAccess::new(&layer_names, "domain_values".to_owned(), hash_set!["domain_values".to_owned(), "utils".to_owned()]))
+        .with_access_rule(MayOnlyAccess::new(&layer_names, "entities".to_owned(), hash_set!["entities".to_owned(), "domain_values".to_owned()]))
+        .with_access_rule(MayOnlyAccess::new(&layer_names, "utils".to_owned(), hash_set!["utils".to_owned()]))
+        .with_access_rule(MayNotAccess::new(&layer_names, "services".to_owned(), hash_set!["materials".to_owned()]))
+        .with_access_rule(MayNotAccess::new(&layer_names, "materials".to_owned(), hash_set!["tests".to_owned()]));
+    let module_tree = ModuleTree::new("src/lib.rs");
+    assert!(architecture.check_access_rules(&module_tree).is_ok());
 }
