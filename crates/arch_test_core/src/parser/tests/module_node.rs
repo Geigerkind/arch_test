@@ -53,10 +53,10 @@ fn object_uses_with_children() {
     let tree: &Vec<ModuleNode> = module_tree.tree();
     let use_map: &HashMap<String, ObjectUse> = module_tree.possible_uses();
 
-    let node1_object_uses = tree[0].object_uses(tree, use_map, true);
-    let node2_object_uses = tree[1].object_uses(tree, use_map, true);
-    let node3_object_uses = tree[2].object_uses(tree, use_map, true);
-    let node4_object_uses = tree[3].object_uses(tree, use_map, true);
+    let node1_object_uses = tree[0].use_relations(tree, use_map, true);
+    let node2_object_uses = tree[1].use_relations(tree, use_map, true);
+    let node3_object_uses = tree[2].use_relations(tree, use_map, true);
+    let node4_object_uses = tree[3].use_relations(tree, use_map, true);
 
     assert_eq!(node1_object_uses.iter().count(), 7);
     assert_eq!(node1_object_uses.iter().filter(|use_relation| use_relation.used_object().node_index() == &2 && use_relation.used_object().full_module_path() == "crate::republish::wambo::WAMBO"
@@ -80,10 +80,10 @@ fn object_uses_without_children() {
     let tree: &Vec<ModuleNode> = module_tree.tree();
     let use_map: &HashMap<String, ObjectUse> = module_tree.possible_uses();
 
-    let node1_object_uses = tree[0].object_uses(tree, use_map, false);
-    let node2_object_uses = tree[1].object_uses(tree, use_map, false);
-    let node3_object_uses = tree[2].object_uses(tree, use_map, false);
-    let node4_object_uses = tree[3].object_uses(tree, use_map, false);
+    let node1_object_uses = tree[0].use_relations(tree, use_map, false);
+    let node2_object_uses = tree[1].use_relations(tree, use_map, false);
+    let node3_object_uses = tree[2].use_relations(tree, use_map, false);
+    let node4_object_uses = tree[3].use_relations(tree, use_map, false);
 
     assert_eq!(node1_object_uses.iter().count(), 1);
     assert!(node1_object_uses.iter().any(|use_relation| use_relation.used_object().node_index() == &2 && use_relation.used_object().full_module_path() == "crate::republish::wambo::WAMBO"

@@ -15,7 +15,7 @@ pub trait AccessRule: Debug {
 impl AccessRule for MayOnlyAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
         for (index, node) in module_tree.tree().iter().enumerate().filter(|(_, node)| node.module_name() == self.accessor()) {
-            if let Some(obj_use) = node.object_uses(module_tree.tree(), module_tree.possible_uses(), true).iter()
+            if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), true).iter()
                 .find(|obj_use| !self.accessed().contains(module_tree.tree()[*obj_use.used_object().node_index()].module_name())
                     && !has_parent_matching_name(self.accessed(), *obj_use.used_object().node_index(), module_tree.tree())
                     && (!*self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
@@ -29,7 +29,7 @@ impl AccessRule for MayOnlyAccess {
 impl AccessRule for MayNotAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
         for (index, node) in module_tree.tree().iter().enumerate().filter(|(_, node)| node.module_name() == self.accessor()) {
-            if let Some(obj_use) = node.object_uses(module_tree.tree(), module_tree.possible_uses(), true).iter()
+            if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), true).iter()
                 .find(|obj_use| (self.accessed().contains(module_tree.tree()[*obj_use.used_object().node_index()].module_name())
                     || has_parent_matching_name(self.accessed(), *obj_use.used_object().node_index(), module_tree.tree()))
                     && (!*self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
@@ -43,7 +43,7 @@ impl AccessRule for MayNotAccess {
 impl AccessRule for NoParentAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
         for (index, node) in module_tree.tree().iter().enumerate().filter(|(_, node)| node.parent_index().is_some()) {
-            if let Some(obj_use) = node.object_uses(module_tree.tree(), module_tree.possible_uses(), true).iter()
+            if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), true).iter()
                 .find(|obj_use| node.parent_index().contains(obj_use.used_object().node_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }

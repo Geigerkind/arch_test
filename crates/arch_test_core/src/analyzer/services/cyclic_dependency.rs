@@ -6,7 +6,7 @@ use crate::parser::materials::ModuleTree;
 pub fn contains_cyclic_dependency(module_tree: &ModuleTree) -> Option<Vec<(usize, UseRelation)>> {
     let mut visited_nodes: Vec<(usize, UseRelation)> = Vec::new();
     for (index, node) in module_tree.tree().iter().enumerate() {
-        if node.object_uses(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|use_relation| *use_relation.used_object().node_index() != index)
+        if node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|use_relation| *use_relation.used_object().node_index() != index)
             .any(|use_relation| {
                 visited_nodes.clear();
                 visited_nodes.push((index, use_relation.clone()));
@@ -30,7 +30,7 @@ fn find_traverse(visited_nodes: &mut Vec<(usize, UseRelation)>, current_index: u
     if visited_nodes.iter().any(|(index, _)| *index == current_index) {
         return true;
     }
-    for use_relation in module_tree.tree()[current_index].object_uses(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|use_relation| *use_relation.used_object().node_index() != current_index) {
+    for use_relation in module_tree.tree()[current_index].use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|use_relation| *use_relation.used_object().node_index() != current_index) {
         visited_nodes.push((current_index, use_relation.clone()));
         if find_traverse(visited_nodes, *use_relation.used_object().node_index(), module_tree) {
             return true;
@@ -62,7 +62,7 @@ pub fn contains_cyclic_dependency_on_level(module_tree: &ModuleTree, level: usiz
         for node_index in included_nodes.iter() {
             node_mapping.insert(*node_index, index);
         }
-        let level_uses: Vec<UseRelation> = node.object_uses(current_tree, module_tree.possible_uses(), true)
+        let level_uses: Vec<UseRelation> = node.use_relations(current_tree, module_tree.possible_uses(), true)
             .into_iter().filter(|use_relation| !included_nodes.contains(use_relation.used_object().node_index()) && *use_relation.used_object().node_index() != index).collect();
         use_relations_per_level.insert(index, level_uses);
     });

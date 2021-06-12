@@ -28,7 +28,7 @@ impl ModuleNode {
         self.children.push(child_index)
     }
 
-    pub fn object_uses(&self, tree: &Vec<Self>, possible_use_map: &HashMap<String, ObjectUse>, include_children: bool) -> HashSet<UseRelation> {
+    pub fn use_relations(&self, tree: &Vec<Self>, possible_use_map: &HashMap<String, ObjectUse>, include_children: bool) -> HashSet<UseRelation> {
         let mut obj_uses = HashSet::new();
         for obj in self.usable_objects.iter().filter(|obj| obj.object_type() == &ObjectType::RePublish
             || obj.object_type() == &ObjectType::Use || obj.object_type() == &ObjectType::ImplicitUse) {
@@ -39,7 +39,7 @@ impl ModuleNode {
 
         if include_children {
             for child in self.children.iter() {
-                for obj_use in tree[*child].object_uses(tree, possible_use_map, true) {
+                for obj_use in tree[*child].use_relations(tree, possible_use_map, true) {
                     obj_uses.insert(obj_use);
                 }
             }
