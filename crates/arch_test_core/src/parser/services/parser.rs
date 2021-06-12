@@ -15,7 +15,7 @@ pub fn parse_main_or_mod_file_into_tree(tree: &mut Vec<ModuleNode>, file_path: &
 
     let dir_entries: Vec<DirEntry> = file_path.parent().unwrap().read_dir().unwrap().filter_map(|entry| entry.ok()).collect();
     for (parent_index, sub_module) in module_references {
-        if let Some(entry) = dir_entries.iter().find(|entry| entry.file_name().to_str().unwrap().to_string().contains(&sub_module)) {
+        if let Some(entry) = dir_entries.iter().find(|entry| entry.file_name().to_str().unwrap().to_string().trim_end_matches(".rs").ends_with(&sub_module)) {
             if entry.path().is_dir() {
                 let path_str = format!("{}/mod.rs", entry.path().to_str().unwrap().to_string());
                 parse_main_or_mod_file_into_tree(tree, Path::new(&path_str), *tree[parent_index].level() + 1, Some(parent_index), sub_module);

@@ -52,7 +52,6 @@ pub fn contains_cyclic_dependency_on_level(module_tree: &ModuleTree, level: usiz
         for node_index in included_nodes.iter() {
             node_mapping.insert(*node_index, index);
         }
-        // TODO: Deduplicate
         let level_uses: Vec<ObjectUse> = node.object_uses(module_tree.tree(), module_tree.possible_uses(), true)
             .into_iter().filter(|obj_use| !included_nodes.contains(obj_use.node_index()) && *obj_use.node_index() != index).collect();
         obj_uses_per_level.insert(index, level_uses);
