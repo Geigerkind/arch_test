@@ -116,6 +116,9 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
                             }
                         }
                     }
+                    SyntaxKind::BLOCK_EXPR => {
+                        parse_file_rec(&child, module_references, usable_objects, current_index);
+                    }
                     _ => {
                         continue;
                     }
@@ -182,6 +185,14 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
                     _ => continue
                 }
             }
+        }
+        SyntaxKind::TUPLE_TYPE => {
+            for impl_use_path in parse_nested_tuple_type(&syntax_node) {
+                usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
+            }
+        }
+        SyntaxKind::IDENT_PAT | SyntaxKind::LITERAL => {
+            return None;
         }
         _ => {
             println!("UNHANDLED EXPRESSION: {:?}", syntax_node);
@@ -301,7 +312,7 @@ fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<String> {
         SyntaxKind::NAME => {
             return result;
         }
-        SyntaxKind::TUPLE_TYPE => {
+        SyntaxKind::TUPLE_TYPE | SyntaxKind::PAREN_TYPE => {
             for child in syntax_node.children() {
                 result.append(&mut parse_nested_tuple_type(&child));
             }
