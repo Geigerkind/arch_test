@@ -1,7 +1,7 @@
 use velcro::hash_set;
 
 use crate::{Architecture, ModuleTree};
-use crate::analyzer::domain_values::access_rules::{NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess};
+use crate::analyzer::domain_values::access_rules::{NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess, MayOnlyAccess, MayNotAccess};
 
 #[test]
 fn no_parent_access() {
@@ -24,5 +24,32 @@ fn no_layer_cyclic_dependencies() {
     let architecture = Architecture::new(hash_set![])
         .with_access_rule(NoLayerCyclicDependencies);
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/no_layer_cyclic_dependencies/main.rs");
+    assert!(architecture.check_access_rules(&module_tree).is_err());
+}
+
+#[test]
+fn may_only_access_positive() {
+    let layer_names = hash_set!["file_1".to_owned(), "file_2".to_owned()];
+    let architecture = Architecture::new(layer_names.clone())
+        .with_access_rule(MayOnlyAccess::new(&layer_names, "file_1".to_owned(), hash_set!["file_2".to_owned()]));
+    let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
+    assert!(architecture.check_access_rules(&module_tree).is_ok());
+}
+
+#[test]
+fn may_only_access_negative() {
+    let layer_names = hash_set!["file_1".to_owned(), "file_2".to_owned()];
+    let architecture = Architecture::new(layer_names.clone())
+        .with_access_rule(MayOnlyAccess::new(&layer_names, "file_1".to_owned(), hash_set![]));
+    let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
+    assert!(architecture.check_access_rules(&module_tree).is_err());
+}
+
+#[test]
+fn may_not_access() {
+    let layer_names = hash_set!["file_1".to_owned(), "file_2".to_owned()];
+    let architecture = Architecture::new(layer_names.clone())
+        .with_access_rule(MayNotAccess::new(&layer_names, "file_1".to_owned(), hash_set!["file_2".to_owned()]));
+    let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
 }
