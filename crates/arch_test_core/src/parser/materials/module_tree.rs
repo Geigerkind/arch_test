@@ -47,11 +47,16 @@ impl ModuleTree {
                 .map(|obj| obj.object_name.clone()).collect();
             for uses in node.usable_objects.iter_mut().filter(|obj| obj.object_type() == &ObjectType::ImplicitUse) {
                 let splits: Vec<&str> = uses.object_name.split("::").collect();
-                if splits.len() <= 1 {
-                    continue;
-                }
-                if let Some(prefix) = use_paths.iter().find(|prefix| prefix.split("::").last().unwrap() == splits[0]) {
-                    uses.object_name = format!("{}::{}", prefix, splits[1..].join("::"));
+                if let Some(prefix) = use_paths.iter().find(|prefix| prefix.ends_with(&splits[0])) {
+                    if splits.len() > 1 {
+                        uses.object_name = format!("{}::{}", prefix, splits[1..].join("::"));
+                    } else {
+                        uses.object_name = prefix.clone();
+                    }
+                } else if let Some(prefix) = use_paths.iter().find(|prefix| prefix.ends_with(&uses.object_name)) {
+                    uses.object_name = prefix.clone();
+                } else if splits.len() > 1 && node_children_module_names.iter().any(|name| name == splits[0]) {
+                    uses.object_name = format!("{}::{}", fully_qualified_names[index], uses.object_name);
                 }
             }
         }
