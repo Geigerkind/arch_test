@@ -1,4 +1,7 @@
+use crate::ModuleTree;
 use crate::parser::entities::ModuleNode;
+use std::collections::HashMap;
+use crate::parser::domain_values::ObjectUse;
 
 #[test]
 fn register_child() {
@@ -41,4 +44,27 @@ fn get_fully_qualified_path() {
     assert_eq!(tree[1].get_fully_qualified_path(&tree), "WAMBO::WAMBO1".to_owned());
     assert_eq!(tree[2].get_fully_qualified_path(&tree), "WAMBO::WAMBO1::WAMBO2".to_owned());
     assert_eq!(tree[3].get_fully_qualified_path(&tree), "WAMBO::WAMBO1::WAMBO2::WAMBO3".to_owned());
+}
+
+#[test]
+fn object_uses_with_children() {
+    let module_tree = ModuleTree::new("src/parser/tests/module_tree/correct_fully_qualified_names/main.rs");
+    let tree: &Vec<ModuleNode> = module_tree.tree();
+    let use_map: &HashMap<String, ObjectUse> = module_tree.possible_uses();
+
+    let node1_object_uses = tree[0].object_uses(tree, use_map, true);
+    let node2_object_uses = tree[1].object_uses(tree, use_map, true);
+    let node3_object_uses = tree[2].object_uses(tree, use_map, true);
+    let node4_object_uses = tree[3].object_uses(tree, use_map, true);
+
+    assert_eq!(node1_object_uses.iter().count(), 2);
+    assert!(node1_object_uses.iter().any(|obj_use| obj_use.node_index() == &2 && obj_use.full_module_path() == "crate::republish::wambo::WAMBO"));
+    assert!(node1_object_uses.iter().any(|obj_use| obj_use.node_index() == &3 && obj_use.full_module_path() == "crate::republish::testo::TESTO"));
+
+    assert_eq!(node2_object_uses.iter().count(), 2);
+    assert!(node2_object_uses.iter().any(|obj_use| obj_use.node_index() == &2 && obj_use.full_module_path() == "crate::republish::wambo::WAMBO"));
+    assert!(node2_object_uses.iter().any(|obj_use| obj_use.node_index() == &3 && obj_use.full_module_path() == "crate::republish::testo::TESTO"));
+
+    assert_eq!(node3_object_uses.iter().count(), 0);
+    assert_eq!(node4_object_uses.iter().count(), 0);
 }
