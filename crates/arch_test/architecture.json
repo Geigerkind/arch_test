@@ -1,0 +1,30 @@
+{
+  "layer_names": [
+    "domain_values",
+    "services"
+  ],
+  "access_rules": [
+    "NoLayerCyclicDependencies",
+    "NoModuleCyclicDependencies",
+    "NoParentAccess",
+    {
+      "MayOnlyAccess": {
+        "accessor": "domain_values",
+        "accessed": [
+          "domain_values"
+        ],
+        "when_same_parent": true
+      }
+    },
+    {
+      "MayOnlyAccess": {
+        "accessor": "services",
+        "accessed": [
+          "services",
+          "domain_values"
+        ],
+        "when_same_parent": true
+      }
+    }
+  ]
+}

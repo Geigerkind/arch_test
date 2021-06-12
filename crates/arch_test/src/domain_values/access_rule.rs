@@ -5,10 +5,12 @@ pub enum AccessRule {
     NoLayerCyclicDependencies,
     MayOnlyAccess {
         accessor: String,
-        accessed: Vec<String>
+        accessed: Vec<String>,
+        when_same_parent: bool,
     },
     MayNotAccess {
         accessor: String,
-        accessed: Vec<String>
+        accessed: Vec<String>,
+        when_same_parent: bool,
     },
 }

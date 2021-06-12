@@ -193,7 +193,7 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
                         for match_arm in child.children() {
                             for arm_item in match_arm.children() {
                                 match arm_item.kind() {
-                                    SyntaxKind::PATH_PAT | SyntaxKind::WILDCARD_PAT | SyntaxKind::OR_PAT => {
+                                    SyntaxKind::PATH_PAT | SyntaxKind::WILDCARD_PAT | SyntaxKind::OR_PAT | SyntaxKind::RECORD_PAT => {
                                         // We wont need those special cases
                                         continue;
                                     }
@@ -238,6 +238,7 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
         SyntaxKind::WHILE_EXPR |
         SyntaxKind::RETURN_EXPR |
         SyntaxKind::INDEX_EXPR |
+        SyntaxKind::TRY_EXPR |
         SyntaxKind::CONDITION |
         SyntaxKind::ARG_LIST |
         SyntaxKind::EXPR_STMT => {
@@ -360,7 +361,7 @@ fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<String> {
 fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<String> {
     let mut result = Vec::new();
     match syntax_node.kind() {
-        SyntaxKind::NAME | SyntaxKind::IDENT_PAT | SyntaxKind::WILDCARD_PAT | SyntaxKind::LIFETIME | SyntaxKind::VISIBILITY => {
+        SyntaxKind::NAME | SyntaxKind::IDENT_PAT | SyntaxKind::WILDCARD_PAT | SyntaxKind::LIFETIME | SyntaxKind::VISIBILITY | SyntaxKind::ATTR => {
             return result;
         }
         SyntaxKind::TUPLE_TYPE | SyntaxKind::PAREN_TYPE | SyntaxKind::REF_TYPE | SyntaxKind::TUPLE_PAT | SyntaxKind::IMPL_TRAIT_TYPE | SyntaxKind::TYPE_BOUND_LIST | SyntaxKind::TYPE_BOUND => {

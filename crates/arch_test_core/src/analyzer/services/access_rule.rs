@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 
-use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoParentAccess, NoModuleCyclicDependencies, NoLayerCyclicDependencies};
+use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess};
 use crate::analyzer::domain_values::RuleViolation;
+use crate::analyzer::services::cyclic_dependency::{contains_cyclic_dependency, contains_cyclic_dependency_on_any_level};
 use crate::parser::entities::ModuleNode;
 use crate::parser::materials::ModuleTree;
-use crate::analyzer::services::cyclic_dependency::{contains_cyclic_dependency, contains_cyclic_dependency_on_any_level};
 
 pub trait AccessRule {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation>;
@@ -15,7 +15,8 @@ impl AccessRule for MayOnlyAccess {
         for (_, node) in module_tree.tree().iter().enumerate().filter(|(_, node)| node.module_name() == self.accessor()) {
             if node.object_uses(module_tree.tree(), module_tree.possible_uses(), true).iter()
                 .any(|obj_use| !self.accessed().contains(module_tree.tree()[*obj_use.node_index()].module_name())
-                    && !has_parent_matching_name(self.accessed(), *obj_use.node_index(), module_tree.tree())) {
+                    && !has_parent_matching_name(self.accessed(), *obj_use.node_index(), module_tree.tree())
+                    && (!*self.when_same_parent() || module_tree.tree()[*obj_use.node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation);
             }
         }
@@ -27,8 +28,9 @@ impl AccessRule for MayNotAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
         for (_, node) in module_tree.tree().iter().enumerate().filter(|(_, node)| node.module_name() == self.accessor()) {
             if node.object_uses(module_tree.tree(), module_tree.possible_uses(), true).iter()
-                .any(|obj_use| self.accessed().contains(module_tree.tree()[*obj_use.node_index()].module_name())
-                    || has_parent_matching_name(self.accessed(), *obj_use.node_index(), module_tree.tree())) {
+                .any(|obj_use| (self.accessed().contains(module_tree.tree()[*obj_use.node_index()].module_name())
+                    || has_parent_matching_name(self.accessed(), *obj_use.node_index(), module_tree.tree()))
+                    && (!*self.when_same_parent() || module_tree.tree()[*obj_use.node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation);
             }
         }

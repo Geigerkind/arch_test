@@ -19,10 +19,10 @@ pub fn parse_specification(specification_path: &Path) -> Result<Architecture, Fa
             AccessRule::NoLayerCyclicDependencies => architecture = architecture.with_access_rule(NoLayerCyclicDependencies),
             AccessRule::NoModuleCyclicDependencies => architecture = architecture.with_access_rule(NoModuleCyclicDependencies),
             AccessRule::NoParentAccess => architecture = architecture.with_access_rule(NoParentAccess),
-            AccessRule::MayOnlyAccess { accessor, accessed } =>
-                architecture = architecture.with_access_rule(MayOnlyAccess::new(&layer_names, accessor, hash_set![..accessed])),
-            AccessRule::MayNotAccess { accessor, accessed } =>
-                architecture = architecture.with_access_rule(MayNotAccess::new(&layer_names, accessor, hash_set![..accessed]))
+            AccessRule::MayOnlyAccess { accessor, accessed, when_same_parent } =>
+                architecture = architecture.with_access_rule(MayOnlyAccess::new(&layer_names, accessor, hash_set![..accessed], when_same_parent)),
+            AccessRule::MayNotAccess { accessor, accessed, when_same_parent } =>
+                architecture = architecture.with_access_rule(MayNotAccess::new(&layer_names, accessor, hash_set![..accessed], when_same_parent))
         }
     }
     Ok(architecture)
