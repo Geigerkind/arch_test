@@ -3,3 +3,4 @@ mod struct_stmt;
 mod types;
 mod functions;
 mod enum_stmt;
+mod traits;
