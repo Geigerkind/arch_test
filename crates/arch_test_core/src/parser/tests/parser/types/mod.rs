@@ -28,7 +28,6 @@ fn complex_generic() {
     let path = Path::new("src/parser/tests/parser/types/complex_generic.rs");
     parse_main_or_mod_file_into_tree(&mut node_tree, path, 0, None, "WAMBO".to_owned());
 
-    println!("{:?}", node_tree);
     assert_eq!(node_tree[0].usable_objects[0].object_type(), &ObjectType::Function);
     assert_eq!(node_tree[0].usable_objects[0].object_name, "main".to_owned());
     for i in 1..11 {
