@@ -55,7 +55,15 @@ impl RuleViolation {
                 println!("Object            | {:?}: {}@{:?}", used_object.usable_object().object_type(), used_object.usable_object().object_name(), used_object.usable_object().text_range());
                 println!("Line in file      | ({}, {:?}): {}", acc_file_line_number, acc_file_column_range, acc_file_line);
             }
-            RuleViolationType::Cycle => {}
+            RuleViolationType::Cycle => {
+                println!("Violated rule: {:?}", self.access_rule);
+                for (node_index, use_relation) in self.involved_object_uses.iter() {
+                    let using_object = use_relation.using_object();
+                    println!(" | File path:    {}", tree[*node_index].file_path());
+                    println!(" | Accessed:     {:?}: {}@{:?}", using_object.object_type(), using_object.object_name(), using_object.text_range());
+                    println!(" ⮟ ");
+                }
+            }
         }
     }
 }
