@@ -130,6 +130,8 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
         SyntaxKind::BIN_EXPR |
         SyntaxKind::TUPLE_EXPR |
         SyntaxKind::PAREN_EXPR |
+        SyntaxKind::CALL_EXPR |
+        SyntaxKind::ARG_LIST |
         SyntaxKind::EXPR_STMT => {
             for child in syntax_node.children() {
                 parse_file_rec(&child, module_references, usable_objects, current_index);
