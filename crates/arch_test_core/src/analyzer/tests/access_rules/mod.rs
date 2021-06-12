@@ -63,8 +63,8 @@ fn myself() {
         .with_access_rule(NoLayerCyclicDependencies)
         .with_access_rule(MayNotAccess::new(&layer_names, "parser".to_owned(), hash_set!["analyzer".to_owned()], true))
         .with_access_rule(MayOnlyAccess::new(&layer_names, "analyzer".to_owned(), hash_set!["analyzer".to_owned(), "parser".to_owned()], true))
-        .with_access_rule(MayOnlyAccess::new(&layer_names, "domain_values".to_owned(), hash_set!["domain_values".to_owned(), "utils".to_owned()], true))
-        .with_access_rule(MayOnlyAccess::new(&layer_names, "entities".to_owned(), hash_set!["entities".to_owned(), "domain_values".to_owned()], true))
+        .with_access_rule(MayOnlyAccess::new(&layer_names, "domain_values".to_owned(), hash_set!["domain_values".to_owned(), "utils".to_owned()], false))
+        .with_access_rule(MayOnlyAccess::new(&layer_names, "entities".to_owned(), hash_set!["entities".to_owned(), "domain_values".to_owned()], false))
         .with_access_rule(MayOnlyAccess::new(&layer_names, "utils".to_owned(), hash_set!["utils".to_owned()], true))
         .with_access_rule(MayNotAccess::new(&layer_names, "services".to_owned(), hash_set!["materials".to_owned()], true))
         .with_access_rule(MayNotAccess::new(&layer_names, "materials".to_owned(), hash_set!["tests".to_owned()], true));
