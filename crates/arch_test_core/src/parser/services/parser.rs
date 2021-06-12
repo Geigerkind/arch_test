@@ -34,7 +34,7 @@ fn parse_syntax_node_tree(tree: &mut Vec<ModuleNode>, syntax_node_children: Synt
     }
 
     for item in syntax_node_children {
-        if let Some((inner_module_start_node, inner_module_name)) = parse_file_rec(&item, module_references, &mut tree.last_mut().unwrap().usable_objects, current_index) {
+        if let Some((inner_module_start_node, inner_module_name)) = parse_file_rec(&item, module_references, &mut tree[current_index].usable_objects, current_index) {
             parse_syntax_node_tree(tree, inner_module_start_node, file_path.clone(), level + 1, Some(current_index), inner_module_name, module_references);
         }
     }

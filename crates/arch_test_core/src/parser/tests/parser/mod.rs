@@ -4,3 +4,4 @@ mod types;
 mod functions;
 mod enum_stmt;
 mod traits;
+mod modules;
