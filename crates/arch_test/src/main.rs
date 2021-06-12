@@ -25,7 +25,9 @@ fn main() {
             err.print(&module_tree.tree());
         }
         if opts.check_for_complete_layer_specification {
-            println!("{:?}", architecture.check_complete_layer_specification(&module_tree));
+            if let Err(err) = architecture.check_complete_layer_specification(&module_tree) {
+                err.print(&module_tree.tree());
+            }
         }
     }
 }
