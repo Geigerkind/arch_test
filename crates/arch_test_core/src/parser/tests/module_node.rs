@@ -68,3 +68,25 @@ fn object_uses_with_children() {
     assert_eq!(node3_object_uses.iter().count(), 0);
     assert_eq!(node4_object_uses.iter().count(), 0);
 }
+
+#[test]
+fn object_uses_without_children() {
+    let module_tree = ModuleTree::new("src/parser/tests/module_tree/correct_fully_qualified_names/main.rs");
+    let tree: &Vec<ModuleNode> = module_tree.tree();
+    let use_map: &HashMap<String, ObjectUse> = module_tree.possible_uses();
+
+    let node1_object_uses = tree[0].object_uses(tree, use_map, false);
+    let node2_object_uses = tree[1].object_uses(tree, use_map, false);
+    let node3_object_uses = tree[2].object_uses(tree, use_map, false);
+    let node4_object_uses = tree[3].object_uses(tree, use_map, false);
+
+    assert_eq!(node1_object_uses.iter().count(), 1);
+    assert!(node1_object_uses.iter().any(|obj_use| obj_use.node_index() == &2 && obj_use.full_module_path() == "crate::republish::wambo::WAMBO"));
+
+    assert_eq!(node2_object_uses.iter().count(), 2);
+    assert!(node2_object_uses.iter().any(|obj_use| obj_use.node_index() == &2 && obj_use.full_module_path() == "crate::republish::wambo::WAMBO"));
+    assert!(node2_object_uses.iter().any(|obj_use| obj_use.node_index() == &3 && obj_use.full_module_path() == "crate::republish::testo::TESTO"));
+
+    assert_eq!(node3_object_uses.iter().count(), 0);
+    assert_eq!(node4_object_uses.iter().count(), 0);
+}

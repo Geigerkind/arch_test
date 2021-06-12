@@ -12,7 +12,6 @@ fn correct_fully_qualified_names() {
 
     assert_eq!(tree[0].usable_objects[0].object_name, "test".to_owned());
     assert_eq!(tree[0].usable_objects[1].object_name, "crate::republish::wambo::WAMBO".to_owned());
-    assert_eq!(tree[0].usable_objects[2].object_name, "crate::republish::testo::TESTO".to_owned());
 
     assert_eq!(tree[1].usable_objects[0].object_name, "crate::republish::wambo::WAMBO".to_owned());
     assert_eq!(tree[1].usable_objects[1].object_name, "crate::republish::testo::TESTO".to_owned());
