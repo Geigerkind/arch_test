@@ -186,7 +186,7 @@ fn parse_file_rec(syntax_node: &SyntaxNode, module_references: &mut Vec<(usize, 
                 }
             }
         }
-        SyntaxKind::TUPLE_TYPE => {
+        SyntaxKind::TUPLE_TYPE | SyntaxKind::PATH_TYPE => {
             for impl_use_path in parse_nested_tuple_type(&syntax_node) {
                 usable_objects.push(UsableObject::new(ObjectType::ImplicitUse, impl_use_path));
             }
