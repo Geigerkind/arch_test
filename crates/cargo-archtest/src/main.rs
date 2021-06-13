@@ -62,7 +62,7 @@ fn main() {
         if let Ok(toml) = cargo_toml::Manifest::from_path(toml_path) {
             if let Some(workspace) = toml.workspace {
                 for member in workspace.members {
-                    if member.contains("*") {
+                    if member.contains('*') {
                         println!("Can not interpret paths with '*'");
                         std::process::exit(1);
                     } else {
