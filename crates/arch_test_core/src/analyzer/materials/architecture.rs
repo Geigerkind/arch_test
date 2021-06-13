@@ -29,7 +29,7 @@ impl<'r> Architecture<'r> {
             if !access_rule.validate(&self.layer_names) {
                 return Err(RuleViolation::new(
                     RuleViolationType::LayerDoNotExist,
-                    Box::new(access_rule.clone()),
+                    Box::new(access_rule),
                     vec![],
                 ));
             }

@@ -38,7 +38,7 @@ impl ModuleNode {
 
     pub fn use_relations(
         &self,
-        tree: &Vec<Self>,
+        tree: &[Self],
         possible_use_map: &HashMap<String, ObjectUse>,
         include_children: bool,
     ) -> HashSet<UseRelation> {
@@ -67,12 +67,12 @@ impl ModuleNode {
         obj_uses
     }
 
-    pub fn get_fully_qualified_path(&self, tree: &Vec<Self>) -> String {
+    pub fn get_fully_qualified_path(&self, tree: &[Self]) -> String {
         let mut name = self.module_name.clone();
-        let mut parent_index = self.parent_index.clone();
+        let mut parent_index = self.parent_index;
         while let Some(index) = parent_index {
             name = format!("{}::{}", tree[index].module_name.clone(), name);
-            parent_index = tree[index].parent_index.clone();
+            parent_index = tree[index].parent_index;
         }
         name
     }
@@ -81,7 +81,7 @@ impl ModuleNode {
         self.index
     }
 
-    pub fn included_nodes(&self, tree: &Vec<Self>) -> Vec<usize> {
+    pub fn included_nodes(&self, tree: &[Self]) -> Vec<usize> {
         let mut result = self.children.clone();
         for child in self.children.iter() {
             result.append(&mut tree[*child].included_nodes(tree));

@@ -36,11 +36,11 @@ impl<'r> RuleViolation<'r> {
         &self.involved_object_uses
     }
 
-    pub fn access_rule(&self) -> &Box<dyn Debug + 'r> {
+    pub fn access_rule(&self) -> &(dyn Debug + 'r) {
         &self.access_rule
     }
 
-    pub fn print(&self, tree: &Vec<ModuleNode>) {
+    pub fn print(&self, tree: &[ModuleNode]) {
         match self.violation_type {
             RuleViolationType::LayerDoNotExist => {
                 println!(
@@ -119,7 +119,7 @@ impl<'r> RuleViolation<'r> {
 }
 
 fn find_text_range_in_file(
-    file_path: &String,
+    file_path: &str,
     text_range: &TextRange,
 ) -> (usize, TextRange, String) {
     let file = File::open(file_path).unwrap();

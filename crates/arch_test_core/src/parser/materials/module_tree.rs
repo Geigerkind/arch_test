@@ -143,7 +143,7 @@ impl ModuleTree {
                 uses.object_name = republish_map
                     .get(&uses.object_name)
                     .cloned()
-                    .unwrap_or(uses.object_name.clone());
+                    .unwrap_or_else(|| uses.object_name.clone());
             }
         }
     }

@@ -519,7 +519,7 @@ fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
         }
     }
 
-    return obj_uses;
+    obj_uses
 }
 
 fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
