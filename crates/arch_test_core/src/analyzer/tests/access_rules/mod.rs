@@ -51,7 +51,7 @@ fn may_only_access_negative() {
 fn may_only_access_when_same_parent_positive() {
     let architecture =
         Architecture::new(hash_set!["layer_1".to_owned(), "layer_2".to_owned()]).with_access_rule(
-            MayOnlyAccess::new("layer_1".to_owned(), hash_set![], true),
+            MayOnlyAccess::new("file_1".to_owned(), hash_set![], true),
         );
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access_same_parent/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_ok());
@@ -61,7 +61,7 @@ fn may_only_access_when_same_parent_positive() {
 fn may_only_access_when_same_parent_negative() {
     let architecture =
         Architecture::new(hash_set!["layer_1".to_owned(), "layer_2".to_owned()]).with_access_rule(
-            MayOnlyAccess::new("layer_1".to_owned(), hash_set![], false),
+            MayOnlyAccess::new("file_1".to_owned(), hash_set![], false),
         );
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access_same_parent/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
@@ -76,6 +76,27 @@ fn may_not_access() {
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
 }
+
+#[test]
+fn may_not_access_when_same_parent_positive() {
+    let architecture =
+        Architecture::new(hash_set!["layer_1".to_owned(), "layer_2".to_owned()]).with_access_rule(
+            MayNotAccess::new("file_1".to_owned(), hash_set!["file_2".to_owned()], true),
+        );
+    let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access_same_parent/main.rs");
+    assert!(architecture.check_access_rules(&module_tree).is_ok());
+}
+
+#[test]
+fn may_not_access_when_same_parent_negative() {
+    let architecture =
+        Architecture::new(hash_set!["layer_1".to_owned(), "layer_2".to_owned()]).with_access_rule(
+            MayNotAccess::new("file_1".to_owned(), hash_set!["file_2".to_owned()], false),
+        );
+    let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access_same_parent/main.rs");
+    assert!(architecture.check_access_rules(&module_tree).is_err());
+}
+
 
 #[test]
 fn may_only_be_accessed_by() {
