@@ -12,21 +12,20 @@ pub fn parse_specification(specification_path: &Path) -> Result<Architecture, Fa
     let specification: Specification = serde_json::from_str(&read_file_content(specification_path)?)
         .map_err(|_| Failure::SpecificationCouldNotBeParsed)?;
 
-    let layer_names = hash_set![..specification.clone().layer_names];
-    let mut architecture = Architecture::new(layer_names.clone());
+    let mut architecture = Architecture::new(hash_set![..specification.clone().layer_names]);
     for access_rule in specification.access_rules {
         match access_rule {
             AccessRule::NoLayerCyclicDependencies => architecture = architecture.with_access_rule(NoLayerCyclicDependencies),
             AccessRule::NoModuleCyclicDependencies => architecture = architecture.with_access_rule(NoModuleCyclicDependencies),
             AccessRule::NoParentAccess => architecture = architecture.with_access_rule(NoParentAccess),
             AccessRule::MayOnlyAccess { accessor, accessed, when_same_parent } =>
-                architecture = architecture.with_access_rule(MayOnlyAccess::new(&layer_names, accessor, hash_set![..accessed], when_same_parent)),
+                architecture = architecture.with_access_rule(MayOnlyAccess::new(accessor, hash_set![..accessed], when_same_parent)),
             AccessRule::MayNotAccess { accessor, accessed, when_same_parent } =>
-                architecture = architecture.with_access_rule(MayNotAccess::new(&layer_names, accessor, hash_set![..accessed], when_same_parent)),
+                architecture = architecture.with_access_rule(MayNotAccess::new(accessor, hash_set![..accessed], when_same_parent)),
             AccessRule::MayOnlyBeAccessedBy { accessors, accessed, when_same_parent } =>
-                architecture = architecture.with_access_rule(MayOnlyBeAccessedBy::new(&layer_names, accessed, hash_set![..accessors], when_same_parent)),
+                architecture = architecture.with_access_rule(MayOnlyBeAccessedBy::new(accessed, hash_set![..accessors], when_same_parent)),
             AccessRule::MayNotBeAccessedBy { accessors, accessed, when_same_parent } =>
-                architecture = architecture.with_access_rule(MayNotBeAccessedBy::new(&layer_names, accessed, hash_set![..accessors], when_same_parent)),
+                architecture = architecture.with_access_rule(MayNotBeAccessedBy::new(accessed, hash_set![..accessors], when_same_parent)),
         }
     }
     Ok(architecture)

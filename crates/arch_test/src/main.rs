@@ -21,10 +21,11 @@ fn main() {
     let specification = parse_specification(Path::new(&opts.specification));
     if let Ok(architecture) = specification {
         let module_tree = ModuleTree::new(opts.input.to_str().unwrap());
-        if let Err(err) = architecture.check_access_rules(&module_tree) {
+        if let Err(err) = architecture.validate_access_rules() {
             err.print(&module_tree.tree());
-        }
-        if opts.check_for_complete_layer_specification {
+        } else if let Err(err) = architecture.check_access_rules(&module_tree) {
+            err.print(&module_tree.tree());
+        } else if opts.check_for_complete_layer_specification {
             if let Err(err) = architecture.check_complete_layer_specification(&module_tree) {
                 err.print(&module_tree.tree());
             }
