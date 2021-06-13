@@ -7,7 +7,7 @@ description = "CLI for arch_test_core"
 license-file = "../../LICENCE"
 
 [dependencies]
-arch_test_core = { path = "../arch_test_core" }
+arch_test_core = { path = "../arch_test_core", version = "0.1.0" }
 structopt = "0.3.21"
 serde = "1.0.126"
 serde_derive = "1.0.126"
