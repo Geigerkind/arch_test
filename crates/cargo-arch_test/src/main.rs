@@ -5,7 +5,6 @@ extern crate serde_json;
 #[macro_use]
 extern crate structopt;
 
-use std::io::Read;
 use std::path::Path;
 
 use structopt::StructOpt;

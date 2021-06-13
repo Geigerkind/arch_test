@@ -6,5 +6,5 @@ authors = ["Tom Dymel <tom@dymel.dev>"]
 
 [dependencies]
 velcro = "0.5.3"
-syntax = { git = "https://github.com/rust-analyzer/rust-analyzer", rev = "adbee62" }
+ra_ap_syntax = "0.0.59"
 itertools = "0.10.1"

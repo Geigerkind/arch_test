@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use syntax::{TextRange, TextSize};
+use ra_ap_syntax::{TextRange, TextSize};
 
 use crate::analyzer::domain_values::RuleViolationType;
 use crate::parser::domain_values::UseRelation;

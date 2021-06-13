@@ -1,7 +1,7 @@
 use std::fs::DirEntry;
 use std::path::Path;
 
-use syntax::{SourceFile, SyntaxKind, SyntaxNode, SyntaxNodeChildren, TextRange, TextSize};
+use ra_ap_syntax::{SourceFile, SyntaxKind, SyntaxNode, SyntaxNodeChildren, TextRange, TextSize};
 
 use crate::parser::domain_values::{ObjectType, UsableObject};
 use crate::parser::entities::ModuleNode;

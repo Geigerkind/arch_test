@@ -1,6 +1,6 @@
 use std::hash::{Hash, Hasher};
 
-use syntax::TextRange;
+use ra_ap_syntax::TextRange;
 
 use crate::parser::domain_values::ObjectType;
 

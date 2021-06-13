@@ -1,5 +1,5 @@
 extern crate itertools;
-extern crate syntax;
+extern crate ra_ap_syntax;
 extern crate velcro;
 
 pub use velcro::hash_set;
