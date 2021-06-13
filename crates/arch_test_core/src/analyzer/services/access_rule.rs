@@ -136,10 +136,10 @@ impl AccessRule for NoLayerCyclicDependencies {
 
 fn has_parent_matching_name(accessor_name: &HashSet<String>, mut node_index: usize, tree: &Vec<ModuleNode>) -> bool {
     while let Some(parent_index) = tree[node_index].parent_index() {
-        if accessor_name.contains(tree[*parent_index].module_name()) {
+        if accessor_name.contains(tree[parent_index].module_name()) {
             return true;
         }
-        node_index = *parent_index;
+        node_index = parent_index;
     }
     false
 }

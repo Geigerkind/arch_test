@@ -1,6 +1,4 @@
 #![feature(option_result_contains)]
-#[macro_use]
-extern crate derive_getters;
 extern crate syntax;
 extern crate velcro;
 extern crate itertools;

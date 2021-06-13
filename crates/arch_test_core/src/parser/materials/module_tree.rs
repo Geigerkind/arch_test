@@ -5,7 +5,7 @@ use crate::parser::domain_values::{ObjectType, ObjectUse};
 use crate::parser::entities::ModuleNode;
 use crate::parser::services::parse_main_or_mod_file_into_tree;
 
-#[derive(Debug, Getters)]
+#[derive(Debug)]
 pub struct ModuleTree {
     tree: Vec<ModuleNode>,
     possible_uses: HashMap<String, ObjectUse>,
@@ -96,5 +96,13 @@ impl ModuleTree {
                 self.possible_uses.insert(full_path.clone(), ObjectUse::new(index, full_path, path_obj.clone()));
             }
         }
+    }
+
+    pub fn tree(&self) -> &Vec<ModuleNode> {
+        &self.tree
+    }
+
+    pub fn possible_uses(&self) -> &HashMap<String, ObjectUse> {
+        &self.possible_uses
     }
 }

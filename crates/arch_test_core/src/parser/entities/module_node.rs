@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::parser::domain_values::{ObjectType, ObjectUse, UsableObject, UseRelation};
 
-#[derive(Debug, Clone, Getters)]
+#[derive(Debug, Clone)]
 pub struct ModuleNode {
     parent_index: Option<usize>,
     level: usize,
@@ -64,5 +64,29 @@ impl ModuleNode {
             result.append(&mut tree[*child].included_nodes(tree));
         }
         result
+    }
+
+    pub fn parent_index(&self) -> Option<usize> {
+        self.parent_index
+    }
+
+    pub fn level(&self) -> usize {
+        self.level
+    }
+
+    pub fn file_path(&self) -> &String {
+        &self.file_path
+    }
+
+    pub fn module_name(&self) -> &String {
+        &self.module_name
+    }
+
+    pub fn children(&self) -> &Vec<usize> {
+        &self.children
+    }
+
+    pub fn usable_objects(&self) -> &Vec<UsableObject> {
+        &self.usable_objects
     }
 }

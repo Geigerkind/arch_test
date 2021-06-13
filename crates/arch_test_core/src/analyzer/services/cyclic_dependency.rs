@@ -47,7 +47,7 @@ fn find_traverse(visited_nodes: &mut Vec<(usize, UseRelation)>, current_index: u
 
 pub fn contains_cyclic_dependency_on_any_level(module_tree: &ModuleTree) -> Option<Vec<(usize, UseRelation)>> {
     let mut current_level = 1;
-    while module_tree.tree().iter().any(|node| *node.level() == current_level) {
+    while module_tree.tree().iter().any(|node| node.level() == current_level) {
         if let Some(involved) = contains_cyclic_dependency_on_level(module_tree, current_level) {
             return Some(involved);
         }
@@ -61,7 +61,7 @@ pub fn contains_cyclic_dependency_on_level(module_tree: &ModuleTree, level: usiz
     let mut use_relations_per_level = HashMap::new();
     let current_tree = module_tree.tree();
 
-    current_tree.iter().enumerate().filter(|(_, node)| *node.level() == level).for_each(|(index, node)| {
+    current_tree.iter().enumerate().filter(|(_, node)| node.level() == level).for_each(|(index, node)| {
         let included_nodes: Vec<usize> = node.included_nodes(current_tree);
         node_mapping.insert(index, index);
         for node_index in included_nodes.iter() {
