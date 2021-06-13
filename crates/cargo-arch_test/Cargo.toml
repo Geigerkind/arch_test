@@ -5,7 +5,6 @@ edition = "2018"
 authors = ["Tom Dymel <tom@dymel.dev>"]
 description = "CLI for arch_test_core"
 license = "AGPL-3.0"
-license-file = "LICENCE"
 
 [dependencies]
 arch_test_core = { path = "../arch_test_core", version = "0.1.0" }
