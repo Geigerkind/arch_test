@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use arch_test_core::access_rules::{MayNotAccess, MayOnlyAccess, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess};
+use arch_test_core::access_rules::{MayNotAccess, MayNotBeAccessedBy, MayOnlyAccess, MayOnlyBeAccessedBy, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess};
 use arch_test_core::Architecture;
 use arch_test_core::hash_set;
 
@@ -22,7 +22,11 @@ pub fn parse_specification(specification_path: &Path) -> Result<Architecture, Fa
             AccessRule::MayOnlyAccess { accessor, accessed, when_same_parent } =>
                 architecture = architecture.with_access_rule(MayOnlyAccess::new(&layer_names, accessor, hash_set![..accessed], when_same_parent)),
             AccessRule::MayNotAccess { accessor, accessed, when_same_parent } =>
-                architecture = architecture.with_access_rule(MayNotAccess::new(&layer_names, accessor, hash_set![..accessed], when_same_parent))
+                architecture = architecture.with_access_rule(MayNotAccess::new(&layer_names, accessor, hash_set![..accessed], when_same_parent)),
+            AccessRule::MayOnlyBeAccessedBy { accessors, accessed, when_same_parent } =>
+                architecture = architecture.with_access_rule(MayOnlyBeAccessedBy::new(&layer_names, accessed, hash_set![..accessors], when_same_parent)),
+            AccessRule::MayNotBeAccessedBy { accessors, accessed, when_same_parent } =>
+                architecture = architecture.with_access_rule(MayNotBeAccessedBy::new(&layer_names, accessed, hash_set![..accessors], when_same_parent)),
         }
     }
     Ok(architecture)

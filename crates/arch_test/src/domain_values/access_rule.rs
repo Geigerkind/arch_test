@@ -13,4 +13,14 @@ pub enum AccessRule {
         accessed: Vec<String>,
         when_same_parent: bool,
     },
+    MayOnlyBeAccessedBy {
+        accessors: Vec<String>,
+        accessed: String,
+        when_same_parent: bool,
+    },
+    MayNotBeAccessedBy {
+        accessors: Vec<String>,
+        accessed: String,
+        when_same_parent: bool,
+    },
 }
