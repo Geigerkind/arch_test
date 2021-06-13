@@ -11,7 +11,7 @@ It applies static analyses on the specified rust project to extract use relation
 ## Install
 You can install it either as subcommand of Cargo or as a package in your developer dependencies.
 ```
-# Subcommand
+# Sub command
 cargo install cargo-archtest --force
 
 # Package
@@ -20,7 +20,7 @@ arch_test_core = "*"
 ```
 
 ## How to use it
-### Using the Cargo subcommand
+### Using the Cargo sub command
 Define in the cargo root path a file called `architecture.json`. Fill it according to the `Specification` struct.
 Example:
 ```json
