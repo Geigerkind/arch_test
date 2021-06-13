@@ -5,6 +5,7 @@ extern crate derive_getters;
 extern crate derive_new;
 extern crate syntax;
 extern crate velcro;
+extern crate itertools;
 
 pub use velcro::hash_set;
 

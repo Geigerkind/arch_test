@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use itertools::Itertools;
+
 use crate::parser::domain_values::UseRelation;
 use crate::parser::materials::ModuleTree;
 
@@ -7,6 +9,7 @@ pub fn contains_cyclic_dependency(module_tree: &ModuleTree) -> Option<Vec<(usize
     let mut visited_nodes: Vec<(usize, UseRelation)> = Vec::new();
     for (index, node) in module_tree.tree().iter().enumerate() {
         if node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|use_relation| *use_relation.used_object().node_index() != index)
+            .dedup_by(|left, right| left.used_object().node_index() == right.used_object().node_index())
             .any(|use_relation| {
                 visited_nodes.clear();
                 visited_nodes.push((index, use_relation.clone()));
@@ -30,7 +33,9 @@ fn find_traverse(visited_nodes: &mut Vec<(usize, UseRelation)>, current_index: u
     if visited_nodes.iter().any(|(index, _)| *index == current_index) {
         return true;
     }
-    for use_relation in module_tree.tree()[current_index].use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter().filter(|use_relation| *use_relation.used_object().node_index() != current_index) {
+    for use_relation in module_tree.tree()[current_index].use_relations(module_tree.tree(), module_tree.possible_uses(), false)
+        .iter().filter(|use_relation| *use_relation.used_object().node_index() != current_index)
+        .dedup_by(|left, right| left.used_object().node_index() == right.used_object().node_index()) {
         visited_nodes.push((current_index, use_relation.clone()));
         if find_traverse(visited_nodes, *use_relation.used_object().node_index(), module_tree) {
             return true;
@@ -69,11 +74,13 @@ pub fn contains_cyclic_dependency_on_level(module_tree: &ModuleTree, level: usiz
 
     let mut visited_nodes: Vec<(usize, UseRelation)> = Vec::new();
     for (index, use_relations) in use_relations_per_level.iter() {
-        if use_relations.iter().filter(|use_relation| node_mapping.contains_key(use_relation.used_object().node_index())).any(|use_relation| {
-            visited_nodes.clear();
-            visited_nodes.push((*index, use_relation.clone()));
-            find_traverse_on_level(&mut visited_nodes, *node_mapping.get(use_relation.used_object().node_index()).unwrap(), &node_mapping, &use_relations_per_level)
-        }) {
+        if use_relations.iter().filter(|use_relation| node_mapping.contains_key(use_relation.used_object().node_index()))
+            .dedup_by(|left, right| node_mapping.get(left.used_object().node_index()).unwrap() == node_mapping.get(right.used_object().node_index()).unwrap())
+            .any(|use_relation| {
+                visited_nodes.clear();
+                visited_nodes.push((*index, use_relation.clone()));
+                find_traverse_on_level(&mut visited_nodes, *node_mapping.get(use_relation.used_object().node_index()).unwrap(), &node_mapping, &use_relations_per_level)
+            }) {
             let last_index = visited_nodes.last().cloned().unwrap();
             let mut result = vec![last_index.clone()];
             for (index, node) in visited_nodes.into_iter().rev().skip(1) {
@@ -92,7 +99,8 @@ fn find_traverse_on_level(visited_nodes: &mut Vec<(usize, UseRelation)>, current
     if visited_nodes.iter().any(|(index, _)| *index == current_index) {
         return true;
     }
-    for use_relation in use_relations_per_level.get(&current_index).unwrap().iter() {
+    for use_relation in use_relations_per_level.get(&current_index).unwrap().iter()
+        .dedup_by(|left, right| node_mapping.get(left.used_object().node_index()).unwrap() == node_mapping.get(right.used_object().node_index()).unwrap()) {
         let use_relation_index = *node_mapping.get(use_relation.used_object().node_index()).unwrap();
         visited_nodes.push((current_index, use_relation.clone()));
         if find_traverse_on_level(visited_nodes, use_relation_index, node_mapping, use_relations_per_level) {
