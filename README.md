@@ -23,7 +23,7 @@ arch_test_core = "*"
 ### Using the Cargo subcommand
 Define in the cargo root path a file called `architecture.json`. Fill it according to the `Specification` struct.
 Example:
-```
+```json
 {
   "layer_names": ["analyzer", "parser", "domain_values", "entities", "materials", "services", "tests", "utils"],
   "access_rules": [
@@ -58,7 +58,7 @@ Example:
 ### Using a rust test
 You can use the `Architecture` struct in order to define your architecture.
 Afterwards you check it for failures.
-```
+```rust
 let architecture = Architecture::new(hash_set!["analyzer".to_owned(), "parser".to_owned(), ...])
 .with_access_rule(NoParentAccess)
 .with_access_rule(NoModuleCyclicDependencies)
@@ -74,6 +74,6 @@ assert!(architecture.validate_access_rules().is_ok());
 assert!(architecture.check_access_rules(&module_tree).is_ok());
 ```
 If you are interested in the failure you can pretty print it like this:
-```
+```rust
 architecture.check_access_rules(&module_tree).err().unwrap().print(module_tree.tree());
 ```
