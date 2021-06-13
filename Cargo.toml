@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "crates/arch_test_core",
+    "crates/arch_test",
+]
