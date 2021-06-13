@@ -136,9 +136,9 @@ impl ModuleTree {
 
         for node in self.tree.iter_mut() {
             for uses in node.usable_objects.iter_mut().filter(|obj| {
-                (obj.object_type() == ObjectType::Use
+                obj.object_type() == ObjectType::Use
                     || obj.object_type() == ObjectType::ImplicitUse
-                    || obj.object_type() == ObjectType::RePublish)
+                    || obj.object_type() == ObjectType::RePublish
             }) {
                 uses.object_name = republish_map
                     .get(&uses.object_name)
