@@ -118,10 +118,7 @@ impl<'r> RuleViolation<'r> {
     }
 }
 
-fn find_text_range_in_file(
-    file_path: &str,
-    text_range: &TextRange,
-) -> (usize, TextRange, String) {
+fn find_text_range_in_file(file_path: &str, text_range: &TextRange) -> (usize, TextRange, String) {
     let file = File::open(file_path).unwrap();
     let reader = BufReader::new(file);
     let mut text_conquered: u32 = 0;
