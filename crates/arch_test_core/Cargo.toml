@@ -1,10 +1,20 @@
 [package]
 name = "arch_test_core"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 authors = ["Tom Dymel <tom@dymel.dev>"]
 description = "Rule based architecture test library"
 license = "AGPL-3.0"
+keywords = ["architecture", "test"]
+categories = ["development-tools", "development-tools::testing"]
+repository = "https://github.com/Geigerkind/arch_test.git"
+readme = "../../README.md"
+include = [
+    "src/",
+    "architecture.json",
+    "../../README.md",
+    "../../LICENCE"
+]
 
 [dependencies]
 velcro = "0.5.3"

@@ -1,13 +1,23 @@
 [package]
 name = "cargo-arch_test"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 authors = ["Tom Dymel <tom@dymel.dev>"]
 description = "CLI for arch_test_core"
 license = "AGPL-3.0"
+keywords = ["architecture", "test", "plugin"]
+categories = ["command-line-utilities", "development-tools", "development-tools::cargo-plugins", "development-tools::testing"]
+repository = "https://github.com/Geigerkind/arch_test.git"
+readme = "../../README.md"
+include = [
+    "src/",
+    "architecture.json",
+    "../../README.md",
+    "../../LICENCE"
+]
 
 [dependencies]
-arch_test_core = { path = "../arch_test_core", version = "0.1.0" }
+arch_test_core = { path = "../arch_test_core", version = "0.1.1" }
 structopt = "0.3.21"
 serde = "1.0.126"
 serde_derive = "1.0.126"
