@@ -2,6 +2,9 @@
 name = "cargo-arch_test"
 version = "0.1.0"
 edition = "2018"
+authors = ["Tom Dymel <tom@dymel.dev>"]
+description = "CLI for arch_test_core"
+license-file = "../../LICENCE"
 
 [dependencies]
 arch_test_core = { path = "../arch_test_core" }
