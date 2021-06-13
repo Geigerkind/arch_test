@@ -6,18 +6,29 @@ use crate::parser::domain_values::ObjectType;
 
 #[derive(Debug, Clone)]
 pub struct UsableObject {
+    is_public: bool,
     object_type: ObjectType,
     pub object_name: String,
     text_range: TextRange,
 }
 
 impl UsableObject {
-    pub fn new(object_type: ObjectType, object_name: String, text_range: TextRange) -> Self {
+    pub fn new(
+        is_public: bool,
+        object_type: ObjectType,
+        object_name: String,
+        text_range: TextRange,
+    ) -> Self {
         UsableObject {
+            is_public,
             object_type,
             object_name,
             text_range,
         }
+    }
+
+    pub fn is_public(&self) -> bool {
+        self.is_public
     }
 
     pub fn object_type(&self) -> ObjectType {

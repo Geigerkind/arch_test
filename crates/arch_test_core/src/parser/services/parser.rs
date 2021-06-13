@@ -124,6 +124,7 @@ fn parse_file_rec(
             let (is_pub, paths) = parse_use_paths(syntax_node);
             for (path, text_range) in paths {
                 usable_objects.push(UsableObject::new(
+                    is_pub,
                     if is_pub {
                         ObjectType::RePublish
                     } else {
@@ -135,10 +136,15 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::STRUCT => {
+            let mut is_pub = false;
             for child in syntax_node.children() {
                 match child.kind() {
+                    SyntaxKind::VISIBILITY => {
+                        is_pub = true;
+                    }
                     SyntaxKind::NAME => {
                         usable_objects.push(UsableObject::new(
+                            is_pub,
                             ObjectType::Struct,
                             child.to_string(),
                             child.text_range(),
@@ -147,6 +153,7 @@ fn parse_file_rec(
                     SyntaxKind::RECORD_FIELD_LIST => {
                         for (impl_use_path, text_range) in parse_field_list(&child) {
                             usable_objects.push(UsableObject::new(
+                                is_pub,
                                 ObjectType::ImplicitUse,
                                 impl_use_path,
                                 text_range,
@@ -160,10 +167,15 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::ENUM => {
+            let mut is_pub = false;
             for child in syntax_node.children() {
                 match child.kind() {
+                    SyntaxKind::VISIBILITY => {
+                        is_pub = true;
+                    }
                     SyntaxKind::NAME => {
                         usable_objects.push(UsableObject::new(
+                            is_pub,
                             ObjectType::Enum,
                             child.to_string(),
                             child.text_range(),
@@ -177,6 +189,7 @@ fn parse_file_rec(
                                     | SyntaxKind::RECORD_FIELD_LIST => {
                                         for (impl_use_path, text_range) in parse_field_list(&arg) {
                                             usable_objects.push(UsableObject::new(
+                                                is_pub,
                                                 ObjectType::ImplicitUse,
                                                 impl_use_path,
                                                 text_range,
@@ -193,10 +206,15 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::FN => {
+            let mut is_pub = false;
             for child in syntax_node.children() {
                 match child.kind() {
+                    SyntaxKind::VISIBILITY => {
+                        is_pub = true;
+                    }
                     SyntaxKind::NAME => {
                         usable_objects.push(UsableObject::new(
+                            is_pub,
                             ObjectType::Function,
                             child.to_string(),
                             child.text_range(),
@@ -205,6 +223,7 @@ fn parse_file_rec(
                     SyntaxKind::PARAM_LIST => {
                         for (impl_use_path, text_range) in parse_field_list(&child) {
                             usable_objects.push(UsableObject::new(
+                                is_pub,
                                 ObjectType::ImplicitUse,
                                 impl_use_path,
                                 text_range,
@@ -217,6 +236,7 @@ fn parse_file_rec(
                                 SyntaxKind::PATH_TYPE => {
                                     for (impl_use_path, text_range) in parse_path_type(&ret) {
                                         usable_objects.push(UsableObject::new(
+                                            is_pub,
                                             ObjectType::ImplicitUse,
                                             impl_use_path,
                                             text_range,
@@ -239,6 +259,7 @@ fn parse_file_rec(
         SyntaxKind::PATH_EXPR | SyntaxKind::TUPLE_STRUCT_PAT => {
             for (impl_use_path, text_range) in parse_path_type(&syntax_node) {
                 usable_objects.push(UsableObject::new(
+                    false,
                     ObjectType::ImplicitUse,
                     impl_use_path,
                     text_range,
@@ -246,10 +267,15 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::TRAIT => {
+            let mut is_pub = false;
             for child in syntax_node.children() {
                 match child.kind() {
+                    SyntaxKind::VISIBILITY => {
+                        is_pub = true;
+                    }
                     SyntaxKind::NAME => {
                         usable_objects.push(UsableObject::new(
+                            is_pub,
                             ObjectType::Trait,
                             child.to_string(),
                             child.text_range(),
@@ -258,6 +284,7 @@ fn parse_file_rec(
                     SyntaxKind::ASSOC_ITEM_LIST => {
                         for (impl_use_path, text_range) in parse_assoc_func_item_list(&child) {
                             usable_objects.push(UsableObject::new(
+                                is_pub,
                                 ObjectType::ImplicitUse,
                                 impl_use_path,
                                 text_range,
@@ -274,6 +301,7 @@ fn parse_file_rec(
                     SyntaxKind::PATH_TYPE => {
                         for (impl_use_path, text_range) in parse_path_type(&child) {
                             usable_objects.push(UsableObject::new(
+                                false,
                                 ObjectType::ImplicitUse,
                                 impl_use_path,
                                 text_range,
@@ -284,6 +312,7 @@ fn parse_file_rec(
                         // TODO: Properly handle assoc list for trait impl
                         for (impl_use_path, text_range) in parse_assoc_func_item_list(&child) {
                             usable_objects.push(UsableObject::new(
+                                false,
                                 ObjectType::ImplicitUse,
                                 impl_use_path,
                                 text_range,
@@ -310,6 +339,7 @@ fn parse_file_rec(
         SyntaxKind::PARAM_LIST => {
             for (impl_use_path, text_range) in parse_field_list(&syntax_node) {
                 usable_objects.push(UsableObject::new(
+                    false,
                     ObjectType::ImplicitUse,
                     impl_use_path,
                     text_range,
@@ -319,6 +349,7 @@ fn parse_file_rec(
         SyntaxKind::TUPLE_TYPE | SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_PAT => {
             for (impl_use_path, text_range) in parse_nested_tuple_type(&syntax_node) {
                 usable_objects.push(UsableObject::new(
+                    false,
                     ObjectType::ImplicitUse,
                     impl_use_path,
                     text_range,
@@ -419,7 +450,13 @@ fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<(String, TextRange)>)
             SyntaxKind::VISIBILITY => {
                 visibility = true;
             }
-            SyntaxKind::USE_TREE => paths = parse_use_tree(&child),
+            SyntaxKind::USE_TREE => {
+                if child.to_string().ends_with('*') {
+                    paths.push((child.to_string(), child.text_range()));
+                } else {
+                    paths.append(&mut parse_use_tree(&child));
+                }
+            }
             _ => unreachable!(),
         }
     }

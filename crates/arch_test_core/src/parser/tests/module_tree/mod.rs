@@ -68,3 +68,20 @@ fn filter_primary_types() {
     assert_eq!(tree[0].usable_objects.len(), 1);
     assert_eq!(tree[0].usable_objects[0].object_name, "main".to_owned());
 }
+
+#[test]
+fn path_wildcard() {
+    let module_tree = ModuleTree::new("src/parser/tests/module_tree/path_wildcard/main.rs");
+
+    let tree = module_tree.tree();
+    assert_eq!(tree[0].usable_objects.len(), 2);
+    assert_eq!(tree[0].usable_objects[0].object_name, "main".to_owned());
+    assert_eq!(
+        tree[0].usable_objects[1].object_name,
+        "crate::ext_file::Test1".to_owned()
+    );
+
+    assert_eq!(tree[1].usable_objects.len(), 2);
+    assert_eq!(tree[1].usable_objects[0].object_name, "Test1".to_owned());
+    assert_eq!(tree[1].usable_objects[1].object_name, "Test2".to_owned());
+}
