@@ -1,4 +1,3 @@
-#![feature(option_result_contains)]
 extern crate syntax;
 extern crate velcro;
 extern crate itertools;

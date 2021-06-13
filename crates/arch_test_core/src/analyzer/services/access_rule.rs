@@ -96,7 +96,7 @@ impl AccessRule for NoParentAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
         for node in module_tree.tree().iter().filter(|node| node.parent_index().is_some()) {
             if let Some(use_relation) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|use_relation| node.parent_index().contains(&use_relation.used_object().node_index())) {
+                .find(|use_relation| node.parent_index().is_some() && node.parent_index().unwrap() == use_relation.used_object().node_index()) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![use_relation.clone()]));
             }
         }

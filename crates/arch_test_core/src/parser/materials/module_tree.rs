@@ -16,8 +16,8 @@ impl ModuleTree {
         let path = Path::new(root_directory);
         assert!(path.exists(), "Expecting a valid path");
         assert!(path.is_file(), "Expecting path to be a file!");
-        let file_name = path.file_name().and_then(|os_str| os_str.to_str());
-        let module_name = if file_name.contains(&"main.rs") || file_name.contains(&"lib.rs") {
+        let file_name = path.file_name().and_then(|os_str| os_str.to_str()).unwrap();
+        let module_name = if file_name == "main.rs" || file_name == "lib.rs" {
             "crate".to_owned()
         } else {
             path.file_name().and_then(|os_str| os_str.to_str()).unwrap().trim_end_matches(".rs").to_owned()
