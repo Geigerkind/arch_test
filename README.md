@@ -1,7 +1,6 @@
 # ArchTest
 [![crates.io](https://img.shields.io/crates/v/cargo-archtest.svg)](https://crates.io/crates/cargo-archtest)
 [![crates.io](https://img.shields.io/crates/v/arch_test_core.svg)](https://crates.io/crates/arch_test_core)
-[![CI](https://github.com/Geigerkind/arch_test/workflows/ci/badge.svg?branch=master)](https://github.com/Geigerkind/arch_test/actions)
 [![codecov](https://codecov.io/gh/Geigerkind/arch_test/branch/master/graph/badge.svg)](https://codecov.io/gh/Geigerkind/arch_test)
 [![license](https://img.shields.io/crates/l/arch_test_core.svg)](https://github.com/Geigerkind/arch_test/blob/master/LICENSE)
 [![Crates.io](https://img.shields.io/crates/d/cargo-archtest?label=cargo%20installs)](https://crates.io/crates/cargo-archtest)
