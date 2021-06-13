@@ -1,7 +1,5 @@
 on: [push, pull_request]
 
-name: Continuous integration
-
 jobs:
   check:
     name: Check
