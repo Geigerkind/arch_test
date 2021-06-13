@@ -1,9 +1,12 @@
-#[macro_use]
-extern crate structopt;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+#[macro_use]
+extern crate structopt;
+
+use std::io::Read;
+use std::path::Path;
 
 use structopt::StructOpt;
 
@@ -11,7 +14,6 @@ use arch_test_core::ModuleTree;
 
 use crate::domain_values::Options;
 use crate::services::parse_specification;
-use std::path::Path;
 
 mod domain_values;
 mod services;
@@ -33,5 +35,8 @@ fn main() {
                 std::process::exit(1);
             }
         }
+    } else {
+        println!("Specification file cant be opened!");
+        std::process::exit(1);
     }
 }

@@ -6,6 +6,7 @@ use crate::analyzer::services::AccessRule;
 use crate::parser::entities::ModuleNode;
 use crate::parser::materials::ModuleTree;
 
+#[derive(Debug)]
 pub struct Architecture<'r> {
     layer_names: HashSet<String>,
     access_rules: Vec<Box<dyn AccessRule + 'r>>,
