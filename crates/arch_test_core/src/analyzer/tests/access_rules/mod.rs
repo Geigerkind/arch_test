@@ -1,7 +1,7 @@
 use velcro::hash_set;
 
 use crate::{Architecture, ModuleTree};
-use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess, MayOnlyBeAccessedBy};
+use crate::analyzer::domain_values::access_rules::{MayNotAccess, MayOnlyAccess, NoLayerCyclicDependencies, NoModuleCyclicDependencies, NoParentAccess, MayOnlyBeAccessedBy, MayNotBeAccessedBy};
 
 #[test]
 fn no_parent_access() {
@@ -59,6 +59,15 @@ fn may_only_be_accessed_by() {
     let layer_names = hash_set!["file_1".to_owned(), "file_2".to_owned(), "file_3".to_owned()];
     let architecture = Architecture::new(layer_names.clone())
         .with_access_rule(MayOnlyBeAccessedBy::new(&layer_names, "file_2".to_owned(), hash_set!["file_1".to_owned()], false));
+    let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
+    assert!(architecture.check_access_rules(&module_tree).is_err());
+}
+
+#[test]
+fn may_not_be_accessed_by() {
+    let layer_names = hash_set!["file_1".to_owned(), "file_2".to_owned(), "file_3".to_owned()];
+    let architecture = Architecture::new(layer_names.clone())
+        .with_access_rule(MayNotBeAccessedBy::new(&layer_names, "file_2".to_owned(), hash_set!["file_3".to_owned()], false));
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
 }
