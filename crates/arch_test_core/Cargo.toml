@@ -10,3 +10,8 @@ license-file = "../../LICENCE"
 velcro = "0.5.3"
 ra_ap_syntax = "0.0.59"
 itertools = "0.10.1"
+
+[badges.codecov]
+branch = "master"
+repository = "Geigerkind/arch_test"
+service = "github"
