@@ -9,7 +9,11 @@ pub struct MayOnlyBeAccessedBy {
 
 impl MayOnlyBeAccessedBy {
     pub fn new(accessed: String, accessor_layers: HashSet<String>, when_same_parent: bool) -> Self {
-        MayOnlyBeAccessedBy { accessors: accessor_layers, accessed, when_same_parent }
+        MayOnlyBeAccessedBy {
+            accessors: accessor_layers,
+            accessed,
+            when_same_parent,
+        }
     }
 
     pub fn accessors(&self) -> &HashSet<String> {

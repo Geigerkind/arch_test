@@ -11,10 +11,22 @@ fn visibility() {
 
     assert_eq!(node_tree.len(), 1);
     assert_eq!(node_tree[0].usable_objects.len(), 2);
-    assert_eq!(node_tree[0].usable_objects[0].object_type(), ObjectType::RePublish);
-    assert_eq!(node_tree[0].usable_objects[0].object_name, "a::b".to_owned());
-    assert_eq!(node_tree[0].usable_objects[1].object_type(), ObjectType::Use);
-    assert_eq!(node_tree[0].usable_objects[1].object_name, "c::d".to_owned());
+    assert_eq!(
+        node_tree[0].usable_objects[0].object_type(),
+        ObjectType::RePublish
+    );
+    assert_eq!(
+        node_tree[0].usable_objects[0].object_name,
+        "a::b".to_owned()
+    );
+    assert_eq!(
+        node_tree[0].usable_objects[1].object_type(),
+        ObjectType::Use
+    );
+    assert_eq!(
+        node_tree[0].usable_objects[1].object_name,
+        "c::d".to_owned()
+    );
 }
 
 #[test]
@@ -32,7 +44,10 @@ fn nested() {
     assert_eq!(usable_objects[1].object_name, "a::d::e::f::g::h".to_owned());
     assert_eq!(usable_objects[2].object_name, "a::d::e::i::j::k".to_owned());
     assert_eq!(usable_objects[3].object_name, "a::d::e::i::j::l".to_owned());
-    assert_eq!(usable_objects[4].object_name, "a::d::e::i::j::m::n::o::p".to_owned());
+    assert_eq!(
+        usable_objects[4].object_name,
+        "a::d::e::i::j::m::n::o::p".to_owned()
+    );
     assert_eq!(usable_objects[5].object_name, "a::d::e::q::r".to_owned());
     assert_eq!(usable_objects[6].object_name, "a::s::t::u".to_owned());
     assert_eq!(usable_objects[7].object_name, "a::v::w".to_owned());

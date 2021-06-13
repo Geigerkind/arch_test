@@ -1,3 +1,3 @@
-mod parser;
-mod module_tree;
 mod module_node;
+mod module_tree;
+mod parser;

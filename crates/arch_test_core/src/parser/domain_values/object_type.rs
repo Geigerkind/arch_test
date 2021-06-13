@@ -7,5 +7,5 @@ pub enum ObjectType {
     Trait,
     RePublish,
     Use,
-    ImplicitUse
+    ImplicitUse,
 }

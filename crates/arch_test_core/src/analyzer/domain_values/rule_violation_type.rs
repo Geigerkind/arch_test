@@ -3,5 +3,5 @@ pub enum RuleViolationType {
     SingleLocation,
     Cycle,
     IncompleteLayerSpecification,
-    LayerDoNotExist
+    LayerDoNotExist,
 }

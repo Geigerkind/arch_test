@@ -8,7 +8,10 @@ pub struct UseRelation {
 
 impl UseRelation {
     pub fn new(using_object: ObjectUse, used_object: ObjectUse) -> Self {
-        UseRelation { using_object, used_object }
+        UseRelation {
+            using_object,
+            used_object,
+        }
     }
 
     pub fn using_object(&self) -> &ObjectUse {

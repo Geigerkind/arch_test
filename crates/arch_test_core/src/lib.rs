@@ -1,6 +1,6 @@
+extern crate itertools;
 extern crate syntax;
 extern crate velcro;
-extern crate itertools;
 
 pub use velcro::hash_set;
 

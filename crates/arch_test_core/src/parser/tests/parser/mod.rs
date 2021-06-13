@@ -1,7 +1,7 @@
-mod use_stmt;
-mod struct_stmt;
-mod types;
-mod functions;
 mod enum_stmt;
-mod traits;
+mod functions;
 mod modules;
+mod struct_stmt;
+mod traits;
+mod types;
+mod use_stmt;

@@ -14,7 +14,13 @@ pub struct ModuleNode {
 }
 
 impl ModuleNode {
-    pub fn new(index: usize, file_path: String, level: usize, parent_index: Option<usize>, module_name: String) -> Self {
+    pub fn new(
+        index: usize,
+        file_path: String,
+        level: usize,
+        parent_index: Option<usize>,
+        module_name: String,
+    ) -> Self {
         ModuleNode {
             index,
             parent_index,
@@ -30,12 +36,23 @@ impl ModuleNode {
         self.children.push(child_index)
     }
 
-    pub fn use_relations(&self, tree: &Vec<Self>, possible_use_map: &HashMap<String, ObjectUse>, include_children: bool) -> HashSet<UseRelation> {
+    pub fn use_relations(
+        &self,
+        tree: &Vec<Self>,
+        possible_use_map: &HashMap<String, ObjectUse>,
+        include_children: bool,
+    ) -> HashSet<UseRelation> {
         let mut obj_uses = HashSet::new();
-        for obj in self.usable_objects.iter().filter(|obj| obj.object_type() == ObjectType::RePublish
-            || obj.object_type() == ObjectType::Use || obj.object_type() == ObjectType::ImplicitUse) {
+        for obj in self.usable_objects.iter().filter(|obj| {
+            obj.object_type() == ObjectType::RePublish
+                || obj.object_type() == ObjectType::Use
+                || obj.object_type() == ObjectType::ImplicitUse
+        }) {
             if let Some(obj_use) = possible_use_map.get(&obj.object_name) {
-                obj_uses.insert(UseRelation::new(ObjectUse::new(self.index, self.get_fully_qualified_path(tree), obj.clone()), obj_use.clone()));
+                obj_uses.insert(UseRelation::new(
+                    ObjectUse::new(self.index, self.get_fully_qualified_path(tree), obj.clone()),
+                    obj_use.clone(),
+                ));
             }
         }
 

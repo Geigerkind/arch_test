@@ -9,10 +9,19 @@ fn complex() {
     let path = Path::new("src/parser/tests/parser/enum_stmt/complex.rs");
     parse_main_or_mod_file_into_tree(&mut node_tree, path, 0, None, "WAMBO".to_owned());
 
-    assert_eq!(node_tree[0].usable_objects[0].object_type(), ObjectType::Enum);
-    assert_eq!(node_tree[0].usable_objects[0].object_name, "TestEnum".to_owned());
+    assert_eq!(
+        node_tree[0].usable_objects[0].object_type(),
+        ObjectType::Enum
+    );
+    assert_eq!(
+        node_tree[0].usable_objects[0].object_name,
+        "TestEnum".to_owned()
+    );
     assert_eq!(node_tree[0].usable_objects[1].object_name, "d".to_owned());
-    assert_eq!(node_tree[0].usable_objects[2].object_name, "e::f".to_owned());
+    assert_eq!(
+        node_tree[0].usable_objects[2].object_name,
+        "e::f".to_owned()
+    );
     assert_eq!(node_tree[0].usable_objects[3].object_name, "g".to_owned());
     assert_eq!(node_tree[0].usable_objects[4].object_name, "h".to_owned());
     assert_eq!(node_tree[0].usable_objects[5].object_name, "i".to_owned());
@@ -20,13 +29,22 @@ fn complex() {
     assert_eq!(node_tree[0].usable_objects[7].object_name, "k".to_owned());
     assert_eq!(node_tree[0].usable_objects[8].object_name, "l".to_owned());
     assert_eq!(node_tree[0].usable_objects[9].object_name, "m".to_owned());
-    assert_eq!(node_tree[0].usable_objects[10].object_name, "n::o".to_owned());
-    assert_eq!(node_tree[0].usable_objects[11].object_name, "p::q".to_owned());
+    assert_eq!(
+        node_tree[0].usable_objects[10].object_name,
+        "n::o".to_owned()
+    );
+    assert_eq!(
+        node_tree[0].usable_objects[11].object_name,
+        "p::q".to_owned()
+    );
     assert_eq!(node_tree[0].usable_objects[12].object_name, "r".to_owned());
     assert_eq!(node_tree[0].usable_objects[13].object_name, "s".to_owned());
     assert_eq!(node_tree[0].usable_objects[14].object_name, "t".to_owned());
     assert_eq!(node_tree[0].usable_objects[15].object_name, "u".to_owned());
     for i in 1..16 {
-        assert_eq!(node_tree[0].usable_objects[i].object_type(), ObjectType::ImplicitUse);
+        assert_eq!(
+            node_tree[0].usable_objects[i].object_type(),
+            ObjectType::ImplicitUse
+        );
     }
 }

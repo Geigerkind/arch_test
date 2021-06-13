@@ -9,7 +9,11 @@ pub struct MayNotBeAccessedBy {
 
 impl MayNotBeAccessedBy {
     pub fn new(accessed: String, accessor_layers: HashSet<String>, when_same_parent: bool) -> Self {
-        MayNotBeAccessedBy { accessors: accessor_layers, accessed, when_same_parent }
+        MayNotBeAccessedBy {
+            accessors: accessor_layers,
+            accessed,
+            when_same_parent,
+        }
     }
 
     pub fn accessors(&self) -> &HashSet<String> {
