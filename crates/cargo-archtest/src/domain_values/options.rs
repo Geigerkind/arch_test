@@ -1,26 +1,24 @@
-use std::path::PathBuf;
+use crate::domain_values::Command;
 
 #[derive(Debug, StructOpt)]
 pub struct Options {
     #[structopt(
         short,
         long,
-        parse(from_os_str),
         default_value = "src/main.rs",
         about = "Path to the crate root file",
         help = "Path to the crate root file"
     )]
-    pub input: PathBuf,
+    pub input: String,
 
     #[structopt(
         short,
         long,
-        parse(from_os_str),
         default_value = "architecture.json",
         about = "Specification file of the architecture",
         help = "Specification file of the architecture"
     )]
-    pub specification: PathBuf,
+    pub specification: String,
 
     #[structopt(
         short,
@@ -29,4 +27,7 @@ pub struct Options {
         help = "Compares layers found with provided"
     )]
     pub check_for_complete_layer_specification: bool,
+
+    #[structopt(subcommand)]
+    cmd: Command
 }
