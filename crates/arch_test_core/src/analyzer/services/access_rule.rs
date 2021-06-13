@@ -9,9 +9,11 @@ use crate::analyzer::entities::RuleViolation;
 use crate::analyzer::services::cyclic_dependency::{contains_cyclic_dependency, contains_cyclic_dependency_on_any_level};
 use crate::parser::entities::ModuleNode;
 use crate::parser::materials::ModuleTree;
+use std::collections::hash_map::RandomState;
 
 pub trait AccessRule: Debug {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation>;
+    fn validate(&self, layer_names: &HashSet<String>) -> bool;
 }
 
 impl AccessRule for MayOnlyAccess {
@@ -21,11 +23,15 @@ impl AccessRule for MayOnlyAccess {
             if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
                 .find(|obj_use| !self.accessed().contains(module_tree.tree()[*obj_use.used_object().node_index()].module_name())
                     && !has_parent_matching_name(self.accessed(), *obj_use.used_object().node_index(), module_tree.tree())
-                    && (!*self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
+                    && (!self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }
         }
         Ok(())
+    }
+
+    fn validate(&self, layer_names: &HashSet<String, RandomState>) -> bool {
+        layer_names.contains(self.accessor()) && self.accessed().iter().all(|layer| layer_names.contains(layer))
     }
 }
 
@@ -36,11 +42,15 @@ impl AccessRule for MayNotAccess {
             if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
                 .find(|obj_use| (self.accessed().contains(module_tree.tree()[*obj_use.used_object().node_index()].module_name())
                     || has_parent_matching_name(self.accessed(), *obj_use.used_object().node_index(), module_tree.tree()))
-                    && (!*self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
+                    && (!self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }
         }
         Ok(())
+    }
+
+    fn validate(&self, layer_names: &HashSet<String, RandomState>) -> bool {
+        layer_names.contains(self.accessor()) && self.accessed().iter().all(|layer| layer_names.contains(layer))
     }
 }
 
@@ -51,11 +61,15 @@ impl AccessRule for MayOnlyBeAccessedBy {
             if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
                 .find(|obj_use| (self.accessed() == module_tree.tree()[*obj_use.used_object().node_index()].module_name()
                     || has_parent_matching_name(&hash_set![self.accessed().clone()], *obj_use.used_object().node_index(), module_tree.tree()))
-                    && (!*self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
+                    && (!self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }
         }
         Ok(())
+    }
+
+    fn validate(&self, layer_names: &HashSet<String, RandomState>) -> bool {
+        layer_names.contains(self.accessed()) && self.accessors().iter().all(|layer| layer_names.contains(layer))
     }
 }
 
@@ -66,11 +80,15 @@ impl AccessRule for MayNotBeAccessedBy {
             if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
                 .find(|obj_use| (self.accessed() == module_tree.tree()[*obj_use.used_object().node_index()].module_name()
                     || has_parent_matching_name(&hash_set![self.accessed().clone()], *obj_use.used_object().node_index(), module_tree.tree()))
-                    && (!*self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
+                    && (!self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }
         }
         Ok(())
+    }
+
+    fn validate(&self, layer_names: &HashSet<String, RandomState>) -> bool {
+        layer_names.contains(self.accessed()) && self.accessors().iter().all(|layer| layer_names.contains(layer))
     }
 }
 
@@ -84,6 +102,10 @@ impl AccessRule for NoParentAccess {
         }
         Ok(())
     }
+
+    fn validate(&self, _layer_names: &HashSet<String, RandomState>) -> bool {
+        true
+    }
 }
 
 impl AccessRule for NoModuleCyclicDependencies {
@@ -93,6 +115,10 @@ impl AccessRule for NoModuleCyclicDependencies {
         }
         Ok(())
     }
+
+    fn validate(&self, _layer_names: &HashSet<String, RandomState>) -> bool {
+        true
+    }
 }
 
 impl AccessRule for NoLayerCyclicDependencies {
@@ -101,6 +127,10 @@ impl AccessRule for NoLayerCyclicDependencies {
             return Err(RuleViolation::new(RuleViolationType::Cycle, Box::new(self.clone()), involved));
         }
         Ok(())
+    }
+
+    fn validate(&self, _layer_names: &HashSet<String, RandomState>) -> bool {
+        true
     }
 }
 

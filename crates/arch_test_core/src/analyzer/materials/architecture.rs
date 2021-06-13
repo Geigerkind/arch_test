@@ -6,12 +6,12 @@ use crate::analyzer::services::AccessRule;
 use crate::parser::entities::ModuleNode;
 use crate::parser::materials::ModuleTree;
 
-pub struct Architecture {
+pub struct Architecture<'r> {
     layer_names: HashSet<String>,
-    access_rules: Vec<Box<dyn AccessRule + 'static>>,
+    access_rules: Vec<Box<dyn AccessRule + 'r>>,
 }
 
-impl Architecture {
+impl<'r> Architecture<'r> {
     pub fn new(layer_names: HashSet<String>) -> Self {
         Architecture {
             layer_names,
@@ -19,13 +19,18 @@ impl Architecture {
         }
     }
 
-    pub fn with_access_rule(mut self, access_rule: impl AccessRule + 'static) -> Self {
+    pub fn with_access_rule(mut self, access_rule: impl AccessRule + 'r) -> Self {
         self.access_rules.push(Box::new(access_rule));
         self
     }
 
-    pub fn validate_access_rules(self) -> Self {
-        unimplemented!()
+    pub fn validate_access_rules(&'r self) -> Result<(), RuleViolation> {
+        for access_rule in self.access_rules.iter() {
+            if !access_rule.validate(&self.layer_names) {
+                return Err(RuleViolation::new(RuleViolationType::LayerDoNotExist, Box::new(access_rule.clone()), vec![]));
+            }
+        }
+        Ok(())
     }
 
     pub fn check_access_rules(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {

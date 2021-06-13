@@ -9,14 +9,14 @@ use crate::parser::domain_values::UseRelation;
 use crate::parser::entities::ModuleNode;
 
 #[derive(Debug)]
-pub struct RuleViolation {
+pub struct RuleViolation<'r> {
     violation_type: RuleViolationType,
-    access_rule: Box<dyn Debug>,
+    access_rule: Box<dyn Debug + 'r>,
     involved_object_uses: Vec<(usize, UseRelation)>,
 }
 
-impl RuleViolation {
-    pub fn new(violation_type: RuleViolationType, access_rule: Box<dyn Debug>, involved_object_uses: Vec<(usize, UseRelation)>) -> Self {
+impl<'r> RuleViolation<'r> {
+    pub fn new(violation_type: RuleViolationType, access_rule: Box<dyn Debug + 'r>, involved_object_uses: Vec<(usize, UseRelation)>) -> Self {
         RuleViolation { violation_type, access_rule, involved_object_uses }
     }
 
@@ -28,12 +28,15 @@ impl RuleViolation {
         &self.involved_object_uses
     }
 
-    pub fn access_rule(&self) -> &Box<dyn Debug> {
+    pub fn access_rule(&self) -> &Box<dyn Debug + 'r> {
         &self.access_rule
     }
 
     pub fn print(&self, tree: &Vec<ModuleNode>) {
         match self.violation_type {
+            RuleViolationType::LayerDoNotExist => {
+                println!("Layers specified in the rule {:?} do not match specified architecture layers.", self.access_rule);
+            }
             RuleViolationType::IncompleteLayerSpecification => {
                 println!("Layer specification is incomplete!");
             }

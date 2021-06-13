@@ -1,8 +1,6 @@
 use std::collections::HashSet;
 
-use crate::analyzer::utils::assert_layer_exist;
-
-#[derive(Debug, Getters, Clone)]
+#[derive(Debug, Clone)]
 pub struct MayOnlyBeAccessedBy {
     accessors: HashSet<String>,
     accessed: String,
@@ -10,11 +8,19 @@ pub struct MayOnlyBeAccessedBy {
 }
 
 impl MayOnlyBeAccessedBy {
-    pub fn new(layer_names: &HashSet<String>, accessed: String, accessor_layers: HashSet<String>, when_same_parent: bool) -> Self {
-        accessor_layers.iter().for_each(|layer| {
-            assert_layer_exist(layer_names, &layer);
-        });
-        assert_layer_exist(layer_names, &accessed);
+    pub fn new(accessed: String, accessor_layers: HashSet<String>, when_same_parent: bool) -> Self {
         MayOnlyBeAccessedBy { accessors: accessor_layers, accessed, when_same_parent }
+    }
+
+    pub fn accessors(&self) -> &HashSet<String> {
+        &self.accessors
+    }
+
+    pub fn accessed(&self) -> &String {
+        &self.accessed
+    }
+
+    pub fn when_same_parent(&self) -> bool {
+        self.when_same_parent
     }
 }

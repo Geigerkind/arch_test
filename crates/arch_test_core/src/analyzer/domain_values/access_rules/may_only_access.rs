@@ -1,7 +1,6 @@
 use std::collections::HashSet;
-use crate::analyzer::utils::assert_layer_exist;
 
-#[derive(Debug, Getters, Clone)]
+#[derive(Debug, Clone)]
 pub struct MayOnlyAccess {
     accessor: String,
     accessed: HashSet<String>,
@@ -9,11 +8,19 @@ pub struct MayOnlyAccess {
 }
 
 impl MayOnlyAccess {
-    pub fn new(layer_names: &HashSet<String>, accessor: String, accessed_layers: HashSet<String>, when_same_parent: bool) -> Self {
-        assert_layer_exist(layer_names, &accessor);
-        accessed_layers.iter().for_each(|layer| {
-            assert_layer_exist(layer_names, &layer);
-        });
+    pub fn new(accessor: String, accessed_layers: HashSet<String>, when_same_parent: bool) -> Self {
         MayOnlyAccess { accessor, accessed: accessed_layers, when_same_parent }
+    }
+
+    pub fn accessor(&self) -> &String {
+        &self.accessor
+    }
+
+    pub fn accessed(&self) -> &HashSet<String> {
+        &self.accessed
+    }
+
+    pub fn when_same_parent(&self) -> bool {
+        self.when_same_parent
     }
 }
