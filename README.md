@@ -9,7 +9,7 @@ It applies static analyses on the specified rust project to extract use relation
 * And more, please consult the documentation.
 
 ## Install
-You can install it either as subcommand of Cargo or as a package in your developer dependencies.
+You can install it either as sub command of Cargo or as a package in your developer dependencies.
 ```
 # Sub command
 cargo install cargo-archtest --force
