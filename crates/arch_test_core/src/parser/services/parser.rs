@@ -27,8 +27,8 @@ pub fn parse_main_or_mod_file_into_tree(tree: &mut Vec<ModuleNode>, file_path: &
 }
 
 fn parse_syntax_node_tree(tree: &mut Vec<ModuleNode>, syntax_node_children: SyntaxNodeChildren, file_path: String, level: usize, parent_index: Option<usize>, module_name: String, module_references: &mut Vec<(usize, String)>) {
-    tree.push(ModuleNode::new(file_path.clone(), level, parent_index, module_name));
-    let current_index = tree.len() - 1;
+    let current_index = tree.len();
+    tree.push(ModuleNode::new(current_index, file_path.clone(), level, parent_index, module_name));
     if let Some(parent_index) = parent_index {
         tree.get_mut(parent_index).unwrap().register_child(current_index);
     }

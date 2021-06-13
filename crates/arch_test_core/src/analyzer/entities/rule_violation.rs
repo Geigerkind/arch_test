@@ -12,11 +12,11 @@ use crate::parser::entities::ModuleNode;
 pub struct RuleViolation<'r> {
     violation_type: RuleViolationType,
     access_rule: Box<dyn Debug + 'r>,
-    involved_object_uses: Vec<(usize, UseRelation)>,
+    involved_object_uses: Vec<UseRelation>,
 }
 
 impl<'r> RuleViolation<'r> {
-    pub fn new(violation_type: RuleViolationType, access_rule: Box<dyn Debug + 'r>, involved_object_uses: Vec<(usize, UseRelation)>) -> Self {
+    pub fn new(violation_type: RuleViolationType, access_rule: Box<dyn Debug + 'r>, involved_object_uses: Vec<UseRelation>) -> Self {
         RuleViolation { violation_type, access_rule, involved_object_uses }
     }
 
@@ -24,7 +24,7 @@ impl<'r> RuleViolation<'r> {
         self.violation_type
     }
 
-    pub fn involved_object_uses(&self) -> &Vec<(usize, UseRelation)> {
+    pub fn involved_object_uses(&self) -> &Vec<UseRelation> {
         &self.involved_object_uses
     }
 
@@ -41,16 +41,16 @@ impl<'r> RuleViolation<'r> {
                 println!("Layer specification is incomplete!");
             }
             RuleViolationType::SingleLocation => {
-                let using_object = self.involved_object_uses[0].1.using_object();
-                let used_object = self.involved_object_uses[0].1.used_object();
-                let (in_file_line_number, in_file_column_range, in_file_line) = find_text_range_in_file(tree[self.involved_object_uses[0].0].file_path(),
-                                                                                                        using_object.text_range());
+                let using_object = self.involved_object_uses[0].using_object();
+                let used_object = self.involved_object_uses[0].used_object();
+                let (in_file_line_number, in_file_column_range, in_file_line) = find_text_range_in_file(tree[using_object.node_index()].file_path(),
+                                                                                                        using_object.usable_object().text_range());
                 let (acc_file_line_number, acc_file_column_range, acc_file_line) = find_text_range_in_file(tree[used_object.node_index()].file_path(),
                                                                                                            used_object.usable_object().text_range());
                 println!("Violated rule     | {:?}", self.access_rule);
                 println!("-------------------");
-                println!("Accessor file     | {}", tree[self.involved_object_uses[0].0].file_path());
-                println!("Object            | {:?}: {}@{:?}", using_object.object_type(), using_object.object_name(), using_object.text_range());
+                println!("Accessor file     | {}", tree[using_object.node_index()].file_path());
+                println!("Object            | {:?}: {}@{:?}", using_object.usable_object().object_type(), using_object.usable_object().object_name(), using_object.usable_object().text_range());
                 println!("Line in file      | ({}, {:?}): {}", in_file_line_number, in_file_column_range, in_file_line);
                 println!("-------------------");
                 println!("Accessed file     | {}", tree[used_object.node_index()].file_path());
@@ -60,10 +60,10 @@ impl<'r> RuleViolation<'r> {
             }
             RuleViolationType::Cycle => {
                 println!("Violated rule: {:?}", self.access_rule);
-                for (node_index, use_relation) in self.involved_object_uses.iter() {
+                for use_relation in self.involved_object_uses.iter() {
                     let using_object = use_relation.using_object();
-                    println!(" | File path:    {}", tree[*node_index].file_path());
-                    println!(" | Accessed:     {:?}: {}@{:?}", using_object.object_type(), using_object.object_name(), using_object.text_range());
+                    println!(" | File path:    {}", tree[using_object.node_index()].file_path());
+                    println!(" | Accessed:     {:?}: {}@{:?}", using_object.usable_object().object_type(), using_object.usable_object().object_name(), using_object.usable_object().text_range());
                     println!(" ⮟ ");
                 }
             }

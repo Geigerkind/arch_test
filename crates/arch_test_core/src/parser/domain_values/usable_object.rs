@@ -35,15 +35,13 @@ impl UsableObject {
 
 impl Hash for UsableObject {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.object_type.hash(state);
         self.object_name.hash(state);
     }
 }
 
 impl PartialEq for UsableObject {
     fn eq(&self, other: &Self) -> bool {
-        self.object_type == other.object_type
-            && self.object_name == other.object_name
+        self.object_name == other.object_name
     }
 }
 

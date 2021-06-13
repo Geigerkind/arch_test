@@ -4,6 +4,7 @@ use crate::parser::domain_values::{ObjectType, ObjectUse, UsableObject, UseRelat
 
 #[derive(Debug, Clone)]
 pub struct ModuleNode {
+    index: usize,
     parent_index: Option<usize>,
     level: usize,
     file_path: String,
@@ -13,8 +14,9 @@ pub struct ModuleNode {
 }
 
 impl ModuleNode {
-    pub fn new(file_path: String, level: usize, parent_index: Option<usize>, module_name: String) -> Self {
+    pub fn new(index: usize, file_path: String, level: usize, parent_index: Option<usize>, module_name: String) -> Self {
         ModuleNode {
+            index,
             parent_index,
             level,
             file_path,
@@ -33,7 +35,7 @@ impl ModuleNode {
         for obj in self.usable_objects.iter().filter(|obj| obj.object_type() == ObjectType::RePublish
             || obj.object_type() == ObjectType::Use || obj.object_type() == ObjectType::ImplicitUse) {
             if let Some(obj_use) = possible_use_map.get(&obj.object_name) {
-                obj_uses.insert(UseRelation::new(obj.clone(), obj_use.clone()));
+                obj_uses.insert(UseRelation::new(ObjectUse::new(self.index, self.get_fully_qualified_path(tree), obj.clone()), obj_use.clone()));
             }
         }
 
@@ -56,6 +58,10 @@ impl ModuleNode {
             parent_index = tree[index].parent_index.clone();
         }
         name
+    }
+
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     pub fn included_nodes(&self, tree: &Vec<Self>) -> Vec<usize> {

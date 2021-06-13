@@ -18,13 +18,13 @@ pub trait AccessRule: Debug {
 
 impl AccessRule for MayOnlyAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
-        for (index, node) in module_tree.tree().iter().enumerate()
-            .filter(|(index, node)| node.module_name() == self.accessor() || has_parent_matching_name(&hash_set![self.accessor().clone()], *index, module_tree.tree())) {
-            if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| !self.accessed().contains(module_tree.tree()[obj_use.used_object().node_index()].module_name())
-                    && !has_parent_matching_name(self.accessed(), obj_use.used_object().node_index(), module_tree.tree())
-                    && (!self.when_same_parent() || module_tree.tree()[obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
-                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
+        for node in module_tree.tree().iter()
+            .filter(|node| node.module_name() == self.accessor() || has_parent_matching_name(&hash_set![self.accessor().clone()], node.index(), module_tree.tree())) {
+            if let Some(use_relation) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
+                .find(|use_relation| !self.accessed().contains(module_tree.tree()[use_relation.used_object().node_index()].module_name())
+                    && !has_parent_matching_name(self.accessed(), use_relation.used_object().node_index(), module_tree.tree())
+                    && (!self.when_same_parent() || module_tree.tree()[use_relation.used_object().node_index()].parent_index() == node.parent_index())) {
+                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![use_relation.clone()]));
             }
         }
         Ok(())
@@ -37,13 +37,13 @@ impl AccessRule for MayOnlyAccess {
 
 impl AccessRule for MayNotAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
-        for (index, node) in module_tree.tree().iter().enumerate()
-            .filter(|(index, node)| node.module_name() == self.accessor() || has_parent_matching_name(&hash_set![self.accessor().clone()], *index, module_tree.tree())) {
-            if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| (self.accessed().contains(module_tree.tree()[obj_use.used_object().node_index()].module_name())
-                    || has_parent_matching_name(self.accessed(), obj_use.used_object().node_index(), module_tree.tree()))
-                    && (!self.when_same_parent() || module_tree.tree()[obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
-                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
+        for node in module_tree.tree().iter()
+            .filter(|node| node.module_name() == self.accessor() || has_parent_matching_name(&hash_set![self.accessor().clone()], node.index(), module_tree.tree())) {
+            if let Some(use_relation) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
+                .find(|use_relation| (self.accessed().contains(module_tree.tree()[use_relation.used_object().node_index()].module_name())
+                    || has_parent_matching_name(self.accessed(), use_relation.used_object().node_index(), module_tree.tree()))
+                    && (!self.when_same_parent() || module_tree.tree()[use_relation.used_object().node_index()].parent_index() == node.parent_index())) {
+                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![use_relation.clone()]));
             }
         }
         Ok(())
@@ -56,13 +56,13 @@ impl AccessRule for MayNotAccess {
 
 impl AccessRule for MayOnlyBeAccessedBy {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
-        for (index, node) in module_tree.tree().iter().enumerate()
-            .filter(|(index, node)| !self.accessors().contains(node.module_name()) && !has_parent_matching_name(self.accessors(), *index, module_tree.tree())) {
-            if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| (self.accessed() == module_tree.tree()[obj_use.used_object().node_index()].module_name()
-                    || has_parent_matching_name(&hash_set![self.accessed().clone()], obj_use.used_object().node_index(), module_tree.tree()))
-                    && (!self.when_same_parent() || module_tree.tree()[obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
-                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
+        for node in module_tree.tree().iter()
+            .filter(|node| !self.accessors().contains(node.module_name()) && !has_parent_matching_name(self.accessors(), node.index(), module_tree.tree())) {
+            if let Some(use_relation) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
+                .find(|use_relation| (self.accessed() == module_tree.tree()[use_relation.used_object().node_index()].module_name()
+                    || has_parent_matching_name(&hash_set![self.accessed().clone()], use_relation.used_object().node_index(), module_tree.tree()))
+                    && (!self.when_same_parent() || module_tree.tree()[use_relation.used_object().node_index()].parent_index() == node.parent_index())) {
+                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![use_relation.clone()]));
             }
         }
         Ok(())
@@ -75,13 +75,13 @@ impl AccessRule for MayOnlyBeAccessedBy {
 
 impl AccessRule for MayNotBeAccessedBy {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
-        for (index, node) in module_tree.tree().iter().enumerate()
-            .filter(|(index, node)| self.accessors().contains(node.module_name()) || has_parent_matching_name(self.accessors(), *index, module_tree.tree())) {
-            if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| (self.accessed() == module_tree.tree()[obj_use.used_object().node_index()].module_name()
-                    || has_parent_matching_name(&hash_set![self.accessed().clone()], obj_use.used_object().node_index(), module_tree.tree()))
-                    && (!self.when_same_parent() || module_tree.tree()[obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
-                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
+        for node in module_tree.tree().iter()
+            .filter(|node| self.accessors().contains(node.module_name()) || has_parent_matching_name(self.accessors(), node.index(), module_tree.tree())) {
+            if let Some(use_relation) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
+                .find(|use_relation| (self.accessed() == module_tree.tree()[use_relation.used_object().node_index()].module_name()
+                    || has_parent_matching_name(&hash_set![self.accessed().clone()], use_relation.used_object().node_index(), module_tree.tree()))
+                    && (!self.when_same_parent() || module_tree.tree()[use_relation.used_object().node_index()].parent_index() == node.parent_index())) {
+                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![use_relation.clone()]));
             }
         }
         Ok(())
@@ -94,10 +94,10 @@ impl AccessRule for MayNotBeAccessedBy {
 
 impl AccessRule for NoParentAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
-        for (index, node) in module_tree.tree().iter().enumerate().filter(|(_, node)| node.parent_index().is_some()) {
-            if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| node.parent_index().contains(&obj_use.used_object().node_index())) {
-                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
+        for node in module_tree.tree().iter().filter(|node| node.parent_index().is_some()) {
+            if let Some(use_relation) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
+                .find(|use_relation| node.parent_index().contains(&use_relation.used_object().node_index())) {
+                return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![use_relation.clone()]));
             }
         }
         Ok(())
