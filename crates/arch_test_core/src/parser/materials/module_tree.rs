@@ -34,6 +34,7 @@ impl ModuleTree {
         parse_main_or_mod_file_into_tree(&mut module_tree.tree, path, 0, None, module_name);
         module_tree.correct_fully_qualified_names();
         module_tree.correct_republish_paths();
+        module_tree.filter_primary_types();
         module_tree.construct_possible_use_map();
         module_tree
     }
@@ -166,6 +167,42 @@ impl ModuleTree {
                     full_path.clone(),
                     ObjectUse::new(index, full_path, path_obj.clone()),
                 );
+            }
+        }
+    }
+
+    fn filter_primary_types(&mut self) {
+        // TODO: We also need to consider combined types once we track them
+        let primary_types = vec![
+            "i8", "i16", "i32", "i64", "i128", "u8", "u16", "u32", "u64", "u128", "isize", "usize",
+            "str", "char", "f32", "f64", "bool", "Self", "self"
+        ];
+        let object_primary_types = vec![
+            "std::collections::HashMap",
+            "std::collections::HashSet",
+            "std::collections::VecDeque",
+            "Vec",
+            "String",
+            "std::collections::LinkedList",
+            "std::collections::BTreeMap",
+            "std::collections::BTreeSet",
+            "std::collections::BinaryHeap",
+        ];
+
+        for node in self.tree.iter_mut() {
+            for i in (0..node.usable_objects.len()).rev() {
+                if primary_types.contains(&node.usable_objects[i].object_name.as_str()) {
+                    node.usable_objects.remove(i);
+                } else {
+                    let splits: Vec<&str> =
+                        node.usable_objects[i].object_name.split("::").collect();
+                    if object_primary_types.contains(&node.usable_objects[i].object_name.as_str())
+                        || object_primary_types
+                            .contains(&splits[..(splits.len() - 1)].join("::").as_str())
+                    {
+                        node.usable_objects.remove(i);
+                    }
+                }
             }
         }
     }

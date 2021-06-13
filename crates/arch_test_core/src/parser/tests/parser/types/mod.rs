@@ -1,6 +1,7 @@
+use std::path::Path;
+
 use crate::parser::domain_values::ObjectType;
 use crate::parser::services::parse_main_or_mod_file_into_tree;
-use std::path::Path;
 
 #[test]
 fn complex_tuple() {

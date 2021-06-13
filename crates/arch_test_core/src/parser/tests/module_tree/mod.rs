@@ -59,3 +59,12 @@ fn construct_possible_use_map() {
     assert!(use_map.contains_key("crate::test"));
     assert!(use_map.contains_key("crate::republish::test"));
 }
+
+#[test]
+fn filter_primary_types() {
+    let module_tree = ModuleTree::new("src/parser/tests/module_tree/filter_primary_types/main.rs");
+
+    let tree = module_tree.tree();
+    assert_eq!(tree[0].usable_objects.len(), 1);
+    assert_eq!(tree[0].usable_objects[0].object_name, "main".to_owned());
+}
