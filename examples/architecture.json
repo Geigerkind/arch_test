@@ -1,0 +1,58 @@
+{
+  "layer_names": [
+    "analyzer",
+    "parser",
+    "domain_values",
+    "entities",
+    "materials",
+    "services",
+    "tests",
+    "utils"
+  ],
+  "access_rules": [
+    "NoLayerCyclicDependencies",
+    "NoModuleCyclicDependencies",
+    "NoParentAccess",
+    {
+      "MayNotAccess": {
+        "accessor": "parser",
+        "accessed": [
+          "analyzer"
+        ],
+        "when_same_parent": true
+      }
+    },
+    {
+      "MayOnlyAccess": {
+        "accessor": "analyzer",
+        "accessed": [
+          "analyzer",
+          "parser"
+        ],
+        "when_same_parent": true
+      }
+    },
+    {
+      "MayOnlyBeAccessedBy": {
+        "accessors": [
+          "materials",
+          "tests"
+        ],
+        "accessed": "services",
+        "when_same_parent": false
+      }
+    },
+    {
+      "MayNotBeAccessedBy": {
+        "accessors": [
+          "services",
+          "domain_values",
+          "entities",
+          "utils"
+        ],
+        "accessed": "materials",
+        "when_same_parent": true
+      }
+    }
+  ]
+}
