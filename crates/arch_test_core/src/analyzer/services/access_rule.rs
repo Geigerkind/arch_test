@@ -21,9 +21,9 @@ impl AccessRule for MayOnlyAccess {
         for (index, node) in module_tree.tree().iter().enumerate()
             .filter(|(index, node)| node.module_name() == self.accessor() || has_parent_matching_name(&hash_set![self.accessor().clone()], *index, module_tree.tree())) {
             if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| !self.accessed().contains(module_tree.tree()[*obj_use.used_object().node_index()].module_name())
-                    && !has_parent_matching_name(self.accessed(), *obj_use.used_object().node_index(), module_tree.tree())
-                    && (!self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
+                .find(|obj_use| !self.accessed().contains(module_tree.tree()[obj_use.used_object().node_index()].module_name())
+                    && !has_parent_matching_name(self.accessed(), obj_use.used_object().node_index(), module_tree.tree())
+                    && (!self.when_same_parent() || module_tree.tree()[obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }
         }
@@ -40,9 +40,9 @@ impl AccessRule for MayNotAccess {
         for (index, node) in module_tree.tree().iter().enumerate()
             .filter(|(index, node)| node.module_name() == self.accessor() || has_parent_matching_name(&hash_set![self.accessor().clone()], *index, module_tree.tree())) {
             if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| (self.accessed().contains(module_tree.tree()[*obj_use.used_object().node_index()].module_name())
-                    || has_parent_matching_name(self.accessed(), *obj_use.used_object().node_index(), module_tree.tree()))
-                    && (!self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
+                .find(|obj_use| (self.accessed().contains(module_tree.tree()[obj_use.used_object().node_index()].module_name())
+                    || has_parent_matching_name(self.accessed(), obj_use.used_object().node_index(), module_tree.tree()))
+                    && (!self.when_same_parent() || module_tree.tree()[obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }
         }
@@ -59,9 +59,9 @@ impl AccessRule for MayOnlyBeAccessedBy {
         for (index, node) in module_tree.tree().iter().enumerate()
             .filter(|(index, node)| !self.accessors().contains(node.module_name()) && !has_parent_matching_name(self.accessors(), *index, module_tree.tree())) {
             if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| (self.accessed() == module_tree.tree()[*obj_use.used_object().node_index()].module_name()
-                    || has_parent_matching_name(&hash_set![self.accessed().clone()], *obj_use.used_object().node_index(), module_tree.tree()))
-                    && (!self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
+                .find(|obj_use| (self.accessed() == module_tree.tree()[obj_use.used_object().node_index()].module_name()
+                    || has_parent_matching_name(&hash_set![self.accessed().clone()], obj_use.used_object().node_index(), module_tree.tree()))
+                    && (!self.when_same_parent() || module_tree.tree()[obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }
         }
@@ -78,9 +78,9 @@ impl AccessRule for MayNotBeAccessedBy {
         for (index, node) in module_tree.tree().iter().enumerate()
             .filter(|(index, node)| self.accessors().contains(node.module_name()) || has_parent_matching_name(self.accessors(), *index, module_tree.tree())) {
             if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| (self.accessed() == module_tree.tree()[*obj_use.used_object().node_index()].module_name()
-                    || has_parent_matching_name(&hash_set![self.accessed().clone()], *obj_use.used_object().node_index(), module_tree.tree()))
-                    && (!self.when_same_parent() || module_tree.tree()[*obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
+                .find(|obj_use| (self.accessed() == module_tree.tree()[obj_use.used_object().node_index()].module_name()
+                    || has_parent_matching_name(&hash_set![self.accessed().clone()], obj_use.used_object().node_index(), module_tree.tree()))
+                    && (!self.when_same_parent() || module_tree.tree()[obj_use.used_object().node_index()].parent_index() == node.parent_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }
         }
@@ -96,7 +96,7 @@ impl AccessRule for NoParentAccess {
     fn check(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
         for (index, node) in module_tree.tree().iter().enumerate().filter(|(_, node)| node.parent_index().is_some()) {
             if let Some(obj_use) = node.use_relations(module_tree.tree(), module_tree.possible_uses(), false).iter()
-                .find(|obj_use| node.parent_index().contains(obj_use.used_object().node_index())) {
+                .find(|obj_use| node.parent_index().contains(&obj_use.used_object().node_index())) {
                 return Err(RuleViolation::new(RuleViolationType::SingleLocation, Box::new(self.clone()), vec![(index, obj_use.clone())]));
             }
         }

@@ -30,8 +30,8 @@ impl ModuleNode {
 
     pub fn use_relations(&self, tree: &Vec<Self>, possible_use_map: &HashMap<String, ObjectUse>, include_children: bool) -> HashSet<UseRelation> {
         let mut obj_uses = HashSet::new();
-        for obj in self.usable_objects.iter().filter(|obj| obj.object_type() == &ObjectType::RePublish
-            || obj.object_type() == &ObjectType::Use || obj.object_type() == &ObjectType::ImplicitUse) {
+        for obj in self.usable_objects.iter().filter(|obj| obj.object_type() == ObjectType::RePublish
+            || obj.object_type() == ObjectType::Use || obj.object_type() == ObjectType::ImplicitUse) {
             if let Some(obj_use) = possible_use_map.get(&obj.object_name) {
                 obj_uses.insert(UseRelation::new(obj.clone(), obj_use.clone()));
             }

@@ -36,7 +36,7 @@ impl ModuleTree {
         let module_names: Vec<String> = self.tree.iter().map(|node| node.module_name().clone()).collect();
         for (index, node) in self.tree.iter_mut().enumerate() {
             let node_children_module_names: Vec<String> = node.children().iter().map(|child_index| module_names[*child_index].clone()).collect();
-            for uses in node.usable_objects.iter_mut().filter(|obj| obj.object_type() == &ObjectType::Use || obj.object_type() == &ObjectType::RePublish) {
+            for uses in node.usable_objects.iter_mut().filter(|obj| obj.object_type() == ObjectType::Use || obj.object_type() == ObjectType::RePublish) {
                 if uses.object_name.starts_with("self::") {
                     uses.object_name = uses.object_name.replace("self::", &format!("{}::", fully_qualified_names[index]));
                 } else if !uses.object_name.starts_with("crate::") {
@@ -47,9 +47,9 @@ impl ModuleTree {
                 }
             }
 
-            let use_paths: Vec<String> = node.usable_objects.iter().filter(|obj| obj.object_type() == &ObjectType::Use || obj.object_type() == &ObjectType::RePublish)
+            let use_paths: Vec<String> = node.usable_objects.iter().filter(|obj| obj.object_type() == ObjectType::Use || obj.object_type() == ObjectType::RePublish)
                 .map(|obj| obj.object_name.clone()).collect();
-            for uses in node.usable_objects.iter_mut().filter(|obj| obj.object_type() == &ObjectType::ImplicitUse) {
+            for uses in node.usable_objects.iter_mut().filter(|obj| obj.object_type() == ObjectType::ImplicitUse) {
                 let splits: Vec<&str> = uses.object_name.split("::").collect();
                 if let Some(prefix) = use_paths.iter().find(|prefix| prefix.ends_with(&splits[0])) {
                     if splits.len() > 1 {
@@ -72,7 +72,7 @@ impl ModuleTree {
 
         for (index, node) in self.tree.iter().enumerate() {
             let prefix = fully_qualified_names[index].clone();
-            for path_obj in node.usable_objects.iter().filter(|obj| obj.object_type() == &ObjectType::RePublish) {
+            for path_obj in node.usable_objects.iter().filter(|obj| obj.object_type() == ObjectType::RePublish) {
                 let split_vec = path_obj.object_name.split("::").collect::<Vec<&str>>();
                 republish_map.insert(format!("{}::{}", prefix, split_vec.last().unwrap()), path_obj.object_name.clone());
             }
@@ -80,7 +80,7 @@ impl ModuleTree {
 
         for node in self.tree.iter_mut() {
             for uses in node.usable_objects.iter_mut()
-                .filter(|obj| (obj.object_type() == &ObjectType::Use || obj.object_type() == &ObjectType::ImplicitUse || obj.object_type() == &ObjectType::RePublish)) {
+                .filter(|obj| (obj.object_type() == ObjectType::Use || obj.object_type() == ObjectType::ImplicitUse || obj.object_type() == ObjectType::RePublish)) {
                 uses.object_name = republish_map.get(&uses.object_name).cloned().unwrap_or(uses.object_name.clone());
             }
         }
@@ -90,8 +90,8 @@ impl ModuleTree {
         let fully_qualified_names: Vec<String> = self.tree.iter().map(|node| node.get_fully_qualified_path(&self.tree)).collect();
         for (index, node) in self.tree.iter().enumerate() {
             let prefix = fully_qualified_names[index].clone();
-            for path_obj in node.usable_objects.iter().filter(|obj| obj.object_type() != &ObjectType::RePublish
-                && obj.object_type() != &ObjectType::Use && obj.object_type() != &ObjectType::ImplicitUse) {
+            for path_obj in node.usable_objects.iter().filter(|obj| obj.object_type() != ObjectType::RePublish
+                && obj.object_type() != ObjectType::Use && obj.object_type() != ObjectType::ImplicitUse) {
                 let full_path = format!("{}::{}", prefix, path_obj.object_name);
                 self.possible_uses.insert(full_path.clone(), ObjectUse::new(index, full_path, path_obj.clone()));
             }

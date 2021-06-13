@@ -6,7 +6,6 @@ authors = ["Tom Dymel <tom@dymel.dev>"]
 
 [dependencies]
 derive-getters = "0.2.0"
-derive-new = "0.5.9"
 velcro = "0.5.3"
 syntax = { git = "https://github.com/rust-analyzer/rust-analyzer" }
 itertools = "0.10.1"

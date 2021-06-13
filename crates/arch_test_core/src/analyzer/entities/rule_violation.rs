@@ -45,7 +45,7 @@ impl<'r> RuleViolation<'r> {
                 let used_object = self.involved_object_uses[0].1.used_object();
                 let (in_file_line_number, in_file_column_range, in_file_line) = find_text_range_in_file(tree[self.involved_object_uses[0].0].file_path(),
                                                                                                         using_object.text_range());
-                let (acc_file_line_number, acc_file_column_range, acc_file_line) = find_text_range_in_file(tree[*used_object.node_index()].file_path(),
+                let (acc_file_line_number, acc_file_column_range, acc_file_line) = find_text_range_in_file(tree[used_object.node_index()].file_path(),
                                                                                                            used_object.usable_object().text_range());
                 println!("Violated rule     | {:?}", self.access_rule);
                 println!("-------------------");
@@ -53,7 +53,7 @@ impl<'r> RuleViolation<'r> {
                 println!("Object            | {:?}: {}@{:?}", using_object.object_type(), using_object.object_name(), using_object.text_range());
                 println!("Line in file      | ({}, {:?}): {}", in_file_line_number, in_file_column_range, in_file_line);
                 println!("-------------------");
-                println!("Accessed file     | {}", tree[*used_object.node_index()].file_path());
+                println!("Accessed file     | {}", tree[used_object.node_index()].file_path());
                 println!("Object path       | {}", used_object.full_module_path());
                 println!("Object            | {:?}: {}@{:?}", used_object.usable_object().object_type(), used_object.usable_object().object_name(), used_object.usable_object().text_range());
                 println!("Line in file      | ({}, {:?}): {}", acc_file_line_number, acc_file_column_range, acc_file_line);

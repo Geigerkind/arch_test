@@ -11,9 +11,9 @@ fn visibility() {
 
     assert_eq!(node_tree.len(), 1);
     assert_eq!(node_tree[0].usable_objects.len(), 2);
-    assert_eq!(node_tree[0].usable_objects[0].object_type(), &ObjectType::RePublish);
+    assert_eq!(node_tree[0].usable_objects[0].object_type(), ObjectType::RePublish);
     assert_eq!(node_tree[0].usable_objects[0].object_name, "a::b".to_owned());
-    assert_eq!(node_tree[0].usable_objects[1].object_type(), &ObjectType::Use);
+    assert_eq!(node_tree[0].usable_objects[1].object_type(), ObjectType::Use);
     assert_eq!(node_tree[0].usable_objects[1].object_name, "c::d".to_owned());
 }
 
@@ -25,7 +25,7 @@ fn nested() {
 
     let usable_objects = &node_tree[0].usable_objects;
     for obj in usable_objects {
-        assert_eq!(obj.object_type(), &ObjectType::Use);
+        assert_eq!(obj.object_type(), ObjectType::Use);
     }
 
     assert_eq!(usable_objects[0].object_name, "a::b::c".to_owned());

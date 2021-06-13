@@ -9,7 +9,7 @@ fn complex() {
     let path = Path::new("src/parser/tests/parser/enum_stmt/complex.rs");
     parse_main_or_mod_file_into_tree(&mut node_tree, path, 0, None, "WAMBO".to_owned());
 
-    assert_eq!(node_tree[0].usable_objects[0].object_type(), &ObjectType::Enum);
+    assert_eq!(node_tree[0].usable_objects[0].object_type(), ObjectType::Enum);
     assert_eq!(node_tree[0].usable_objects[0].object_name, "TestEnum".to_owned());
     assert_eq!(node_tree[0].usable_objects[1].object_name, "d".to_owned());
     assert_eq!(node_tree[0].usable_objects[2].object_name, "e::f".to_owned());
@@ -27,6 +27,6 @@ fn complex() {
     assert_eq!(node_tree[0].usable_objects[14].object_name, "t".to_owned());
     assert_eq!(node_tree[0].usable_objects[15].object_name, "u".to_owned());
     for i in 1..16 {
-        assert_eq!(node_tree[0].usable_objects[i].object_type(), &ObjectType::ImplicitUse);
+        assert_eq!(node_tree[0].usable_objects[i].object_type(), ObjectType::ImplicitUse);
     }
 }
