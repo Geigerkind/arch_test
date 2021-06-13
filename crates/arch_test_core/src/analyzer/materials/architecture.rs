@@ -24,6 +24,10 @@ impl Architecture {
         self
     }
 
+    pub fn validate_access_rules(self) -> Self {
+        unimplemented!()
+    }
+
     pub fn check_access_rules(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
         for access_rule in self.access_rules.iter() {
             access_rule.check(&module_tree)?;
