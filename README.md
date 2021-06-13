@@ -77,3 +77,19 @@ If you are interested in the failure you can pretty print it like this:
 ```rust
 architecture.check_access_rules(&module_tree).err().unwrap().print(module_tree.tree());
 ```
+
+## Continues integration
+You can use it in continues integration by using either methods.
+If you decide to use the Cargo sub command on GitHub, the following snippet will allow you to test your project.
+```yml
+arch_test:
+name: ArchTest
+runs-on: ubuntu-latest
+steps:
+  - uses: actions/checkout@v2
+  - uses: actions-rs/install@v0.1
+    with:
+      crate: cargo-archtest
+      version: latest
+  - run: cargo archtest
+```

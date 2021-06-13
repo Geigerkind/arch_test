@@ -356,6 +356,7 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::IDENT_PAT
+        | SyntaxKind::RECORD_PAT
         | SyntaxKind::LITERAL
         | SyntaxKind::EXTERN_CRATE
         | SyntaxKind::CONTINUE_EXPR
