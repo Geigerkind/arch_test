@@ -17,7 +17,7 @@ include = [
 ]
 
 [dependencies]
-arch_test_core = { path = "../arch_test_core", version = "0.1.1" }
+arch_test_core = { path = "../arch_test_core", version = "0.1.2" }
 structopt = "0.3.21"
 serde = "1.0.126"
 serde_derive = "1.0.126"
