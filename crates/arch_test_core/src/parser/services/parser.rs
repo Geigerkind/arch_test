@@ -544,6 +544,7 @@ fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)>
             return result;
         }
         SyntaxKind::TUPLE_TYPE
+        | SyntaxKind::SLICE_TYPE
         | SyntaxKind::PAREN_TYPE
         | SyntaxKind::REF_TYPE
         | SyntaxKind::TUPLE_PAT
