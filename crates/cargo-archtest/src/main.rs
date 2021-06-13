@@ -21,7 +21,11 @@ mod services;
 fn check_architecture(directory_path: &str, check_for_complete_layer_specification: bool) {
     let main_path_str = format!("{}/src/main.rs", directory_path);
     let main_path = Path::new(&main_path_str);
-    let root_path = if main_path.exists() && main_path.is_file() { format!("{}/src/main.rs", directory_path) } else { format!("{}/src/lib.rs", directory_path) };
+    let root_path = if main_path.exists() && main_path.is_file() {
+        format!("{}/src/main.rs", directory_path)
+    } else {
+        format!("{}/src/lib.rs", directory_path)
+    };
     let specification_path = format!("{}/architecture.json", directory_path);
     let specification = parse_specification(Path::new(&specification_path));
 
@@ -40,13 +44,19 @@ fn check_architecture(directory_path: &str, check_for_complete_layer_specificati
             }
         }
     } else {
-        println!("Specification file cant be opened for '{}'.", directory_path);
+        println!(
+            "Specification file cant be opened for '{}'.",
+            directory_path
+        );
         std::process::exit(1);
     }
 }
 
 fn main() {
-    let Command::Archtest {check_for_complete_layer_specification, toml_path} = Command::from_args();
+    let Command::Archtest {
+        check_for_complete_layer_specification,
+        toml_path,
+    } = Command::from_args();
     let toml_path = Path::new(&toml_path);
     if toml_path.exists() && toml_path.is_file() {
         if let Ok(toml) = cargo_toml::Manifest::from_path(toml_path) {
