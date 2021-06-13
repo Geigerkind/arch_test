@@ -1,5 +1,5 @@
 [package]
-name = "cargo-arch_test"
+name = "cargo-arch-test"
 version = "0.1.0"
 edition = "2018"
 authors = ["Tom Dymel <tom@dymel.dev>"]
