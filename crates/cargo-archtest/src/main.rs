@@ -48,7 +48,6 @@ fn check_architecture(directory_path: &str, check_for_complete_layer_specificati
             "Specification file cant be opened for '{}'.",
             directory_path
         );
-        std::process::exit(1);
     }
 }
 

@@ -3,4 +3,5 @@
 members = [
     "crates/arch_test_core",
     "crates/cargo-archtest",
+    "examples/example_test"
 ]

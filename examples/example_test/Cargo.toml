@@ -1,0 +1,8 @@
+[package]
+name = "example_test"
+version = "0.1.0"
+authors = ["Tom Dymel <tom@dymel.dev>"]
+edition = "2018"
+
+[dev-dependencies]
+arch_test_core = { path = "../../crates/arch_test_core" }
