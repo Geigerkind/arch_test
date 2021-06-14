@@ -28,11 +28,13 @@ pub fn contains_cyclic_dependency(module_tree: &ModuleTree) -> Option<Vec<UseRel
             let last_index = visited_nodes.last().cloned().unwrap();
             let mut result = vec![last_index.clone()];
             for node in visited_nodes.into_iter().rev().skip(1) {
+                let using_index = node.using_object().node_index();
                 result.push(node);
-                if index == last_index.used_object().node_index() {
+                if using_index == last_index.used_object().node_index() {
                     break;
                 }
             }
+            result.reverse();
             return Some(result);
         }
     }
@@ -143,10 +145,15 @@ pub fn contains_cyclic_dependency_on_level(
             let mut result = vec![last_index.clone()];
             for node in visited_nodes.into_iter().rev().skip(1) {
                 result.push(node);
-                if *index == last_index.used_object().node_index() {
+                if index
+                    == node_mapping
+                        .get(&last_index.used_object().node_index())
+                        .unwrap()
+                {
                     break;
                 }
             }
+            result.reverse();
             return Some(result);
         }
     }
