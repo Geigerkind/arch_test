@@ -59,6 +59,20 @@ fn no_layer_cyclic_dependencies() {
 }
 
 #[test]
+fn cyclic_dependency_over_several_layers() {
+    let architecture = Architecture::new(hash_set![]).with_access_rule(NoLayerCyclicDependencies);
+    let module_tree = ModuleTree::new(
+        "src/analyzer/tests/access_rules/cyclic_dependency_over_several_layers/main.rs",
+    );
+    assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
+}
+
+#[test]
 fn may_only_access_positive() {
     let architecture =
         Architecture::new(hash_set!["file_1".to_owned(), "file_2".to_owned()]).with_access_rule(

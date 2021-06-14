@@ -118,7 +118,7 @@ pub fn contains_cyclic_dependency_on_level(
         });
 
     let mut visited_nodes: Vec<UseRelation> = Vec::new();
-    for (index, use_relations) in use_relations_per_level.iter() {
+    for (_index, use_relations) in use_relations_per_level.iter() {
         if use_relations
             .iter()
             .filter(|use_relation| {
@@ -144,9 +144,13 @@ pub fn contains_cyclic_dependency_on_level(
             let last_index = visited_nodes.last().cloned().unwrap();
             let mut result = vec![last_index.clone()];
             for node in visited_nodes.into_iter().rev().skip(1) {
+                let using_index = node_mapping
+                    .get(&node.using_object().node_index())
+                    .cloned()
+                    .unwrap();
                 result.push(node);
-                if index
-                    == node_mapping
+                if using_index
+                    == *node_mapping
                         .get(&last_index.used_object().node_index())
                         .unwrap()
                 {
@@ -166,10 +170,12 @@ fn find_traverse_on_level(
     node_mapping: &HashMap<usize, usize>,
     use_relations_per_level: &HashMap<usize, Vec<UseRelation>>,
 ) -> bool {
-    if visited_nodes
-        .iter()
-        .any(|use_relation| use_relation.using_object().node_index() == current_index)
-    {
+    if visited_nodes.iter().any(|use_relation| {
+        *node_mapping
+            .get(&use_relation.using_object().node_index())
+            .unwrap()
+            == current_index
+    }) {
         return true;
     }
     for use_relation in use_relations_per_level
