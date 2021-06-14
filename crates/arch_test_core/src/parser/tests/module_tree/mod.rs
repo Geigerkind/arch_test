@@ -85,3 +85,16 @@ fn path_wildcard() {
     assert_eq!(tree[1].usable_objects[0].object_name, "Test1".to_owned());
     assert_eq!(tree[1].usable_objects[1].object_name, "Test2".to_owned());
 }
+
+#[test]
+fn non_main_or_lib_root() {
+    let module_tree =
+        ModuleTree::new("src/parser/tests/module_tree/non_main_or_lib_root/file_1.rs");
+
+    let tree = module_tree.tree();
+    assert_eq!(tree.len(), 2);
+    assert_eq!(tree[0].module_name(), "file_1");
+    assert_eq!(tree[0].parent_index(), None);
+    assert_eq!(tree[1].module_name(), "file_2");
+    assert_eq!(tree[1].parent_index(), Some(0));
+}
