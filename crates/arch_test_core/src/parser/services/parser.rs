@@ -398,7 +398,10 @@ fn parse_file_rec(
                 ));
             }
         }
-        SyntaxKind::TUPLE_TYPE | SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_PAT | SyntaxKind::SLICE_TYPE => {
+        SyntaxKind::TUPLE_TYPE
+        | SyntaxKind::PATH_TYPE
+        | SyntaxKind::TUPLE_PAT
+        | SyntaxKind::SLICE_TYPE => {
             for (impl_use_path, text_range) in parse_nested_tuple_type(&syntax_node) {
                 usable_objects.push(UsableObject::new(
                     false,
@@ -463,7 +466,12 @@ fn parse_file_rec(
                         is_pub = true;
                     }
                     SyntaxKind::NAME => {
-                        usable_objects.push(UsableObject::new(is_pub, ObjectType::TypeAlias, child.to_string(), child.text_range()));
+                        usable_objects.push(UsableObject::new(
+                            is_pub,
+                            ObjectType::TypeAlias,
+                            child.to_string(),
+                            child.text_range(),
+                        ));
                     }
                     SyntaxKind::PATH_TYPE => {
                         for (impl_use_path, text_range) in parse_path_type(&child) {
@@ -475,7 +483,7 @@ fn parse_file_rec(
                             ));
                         }
                     }
-                    _ => continue
+                    _ => continue,
                 }
             }
         }
@@ -553,7 +561,11 @@ fn parse_file_rec(
                 syntax_node,
                 syntax_node.to_string()
             );
-            println!(" => Parent: {:?} => {}", syntax_node.parent().unwrap(), syntax_node.parent().unwrap().to_string());
+            println!(
+                " => Parent: {:?} => {}",
+                syntax_node.parent().unwrap(),
+                syntax_node.parent().unwrap().to_string()
+            );
             return None;
         }
     }
@@ -582,7 +594,7 @@ fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<(String, TextRange)>)
             _ => {
                 println!("{:?} => {}", child, child.to_string());
                 unreachable!()
-            },
+            }
         }
     }
     (visibility, paths)
@@ -653,7 +665,8 @@ fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
                                         }
                                     }
                                     SyntaxKind::GENERIC_ARG_LIST => {
-                                        obj_uses.append(&mut parse_generic_arg_list(&p_segment_child));
+                                        obj_uses
+                                            .append(&mut parse_generic_arg_list(&p_segment_child));
                                     }
                                     _ => continue,
                                 }
@@ -677,13 +690,8 @@ fn parse_generic_arg_list(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> 
             SyntaxKind::TYPE_ARG => {
                 for t_arg_child in arg.children() {
                     match t_arg_child.kind() {
-                        SyntaxKind::PATH_TYPE
-                        | SyntaxKind::TUPLE_TYPE => {
-                            result.append(
-                                &mut parse_nested_tuple_type(
-                                    &t_arg_child,
-                                ),
-                            );
+                        SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_TYPE => {
+                            result.append(&mut parse_nested_tuple_type(&t_arg_child));
                         }
                         _ => continue,
                     }
