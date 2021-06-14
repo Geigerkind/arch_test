@@ -66,13 +66,31 @@ pub fn parse_main_or_mod_file_into_tree(
         }) {
             if entry.path().is_dir() {
                 let path_str = format!("{}/mod.rs", entry.path().to_str().unwrap().to_string());
-                parse_main_or_mod_file_into_tree(
-                    tree,
-                    Path::new(&path_str),
-                    tree[parent_index].level() + 1,
-                    Some(parent_index),
-                    sub_module,
-                );
+                let mod_path = Path::new(&path_str);
+                if mod_path.exists() && mod_path.is_file() {
+                    parse_main_or_mod_file_into_tree(
+                        tree,
+                        mod_path,
+                        tree[parent_index].level() + 1,
+                        Some(parent_index),
+                        sub_module,
+                    );
+                } else {
+                    // Just discover all rust files in this directory
+                    // TODO: Create pseudo parent module?
+                    for sub_entry in entry.path().read_dir().unwrap().filter_map(|etr| etr.ok()) {
+                        let sub_entry_name = sub_entry.file_name().to_str().unwrap().to_string();
+                        if sub_entry_name.ends_with(".rs") {
+                            parse_main_or_mod_file_into_tree(
+                                tree,
+                                Path::new(&sub_entry.path()),
+                                tree[parent_index].level() + 1,
+                                Some(parent_index),
+                                sub_entry_name.trim_end_matches(".rs").to_owned(),
+                            );
+                        }
+                    }
+                }
             } else {
                 parse_main_or_mod_file_into_tree(
                     tree,
@@ -221,7 +239,7 @@ fn parse_file_rec(
                 }
             }
         }
-        SyntaxKind::FN => {
+        SyntaxKind::FN | SyntaxKind::CLOSURE_EXPR | SyntaxKind::FN_PTR_TYPE => {
             let mut is_pub = false;
             for child in syntax_node.children() {
                 match child.kind() {
@@ -272,7 +290,7 @@ fn parse_file_rec(
                 }
             }
         }
-        SyntaxKind::PATH_EXPR | SyntaxKind::TUPLE_STRUCT_PAT => {
+        SyntaxKind::PATH_EXPR | SyntaxKind::TUPLE_STRUCT_PAT | SyntaxKind::PATH_PAT => {
             for (impl_use_path, text_range) in parse_path_type(&syntax_node) {
                 usable_objects.push(UsableObject::new(
                     false,
@@ -380,7 +398,7 @@ fn parse_file_rec(
                 ));
             }
         }
-        SyntaxKind::TUPLE_TYPE | SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_PAT => {
+        SyntaxKind::TUPLE_TYPE | SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_PAT | SyntaxKind::SLICE_TYPE => {
             for (impl_use_path, text_range) in parse_nested_tuple_type(&syntax_node) {
                 usable_objects.push(UsableObject::new(
                     false,
@@ -398,6 +416,8 @@ fn parse_file_rec(
                             for arm_item in match_arm.children() {
                                 match arm_item.kind() {
                                     SyntaxKind::PATH_PAT
+                                    | SyntaxKind::LITERAL_PAT
+                                    | SyntaxKind::SLICE_PAT
                                     | SyntaxKind::WILDCARD_PAT
                                     | SyntaxKind::OR_PAT
                                     | SyntaxKind::RECORD_PAT => {
@@ -459,7 +479,30 @@ fn parse_file_rec(
                 }
             }
         }
+        SyntaxKind::RECORD_EXPR => {
+            // TODO: Handle
+            return None;
+        }
+        SyntaxKind::GENERIC_ARG_LIST => {
+            for (impl_use_path, text_range) in parse_generic_arg_list(&syntax_node) {
+                usable_objects.push(UsableObject::new(
+                    false,
+                    ObjectType::ImplicitUse,
+                    impl_use_path,
+                    text_range,
+                ));
+            }
+        }
         SyntaxKind::IDENT_PAT
+        | SyntaxKind::LIFETIME
+        | SyntaxKind::WILDCARD_PAT
+        | SyntaxKind::LABEL
+        | SyntaxKind::SLICE_PAT
+        | SyntaxKind::REF_PAT
+        | SyntaxKind::VISIBILITY
+        | SyntaxKind::NAME
+        | SyntaxKind::EXTERN_BLOCK
+        | SyntaxKind::MACRO_PAT
         | SyntaxKind::MACRO_RULES
         | SyntaxKind::ATTR
         | SyntaxKind::RECORD_PAT
@@ -470,17 +513,21 @@ fn parse_file_rec(
             return None;
         }
         SyntaxKind::NAME_REF
+        | SyntaxKind::INFER_TYPE
+        | SyntaxKind::ARRAY_TYPE
+        | SyntaxKind::MATCH_GUARD
         | SyntaxKind::REF_TYPE
         | SyntaxKind::RANGE_EXPR
         | SyntaxKind::FIELD_EXPR
         | SyntaxKind::BLOCK_EXPR
         | SyntaxKind::LET_STMT
+        | SyntaxKind::STATIC
+        | SyntaxKind::CONST
         | SyntaxKind::BIN_EXPR
         | SyntaxKind::TUPLE_EXPR
         | SyntaxKind::PAREN_EXPR
         | SyntaxKind::METHOD_CALL_EXPR
         | SyntaxKind::CALL_EXPR
-        | SyntaxKind::CLOSURE_EXPR
         | SyntaxKind::PREFIX_EXPR
         | SyntaxKind::REF_EXPR
         | SyntaxKind::IF_EXPR
@@ -490,6 +537,9 @@ fn parse_file_rec(
         | SyntaxKind::INDEX_EXPR
         | SyntaxKind::CAST_EXPR
         | SyntaxKind::TRY_EXPR
+        | SyntaxKind::LOOP_EXPR
+        | SyntaxKind::ARRAY_EXPR
+        | SyntaxKind::EFFECT_EXPR
         | SyntaxKind::CONDITION
         | SyntaxKind::ARG_LIST
         | SyntaxKind::EXPR_STMT => {
@@ -503,6 +553,7 @@ fn parse_file_rec(
                 syntax_node,
                 syntax_node.to_string()
             );
+            println!(" => Parent: {:?} => {}", syntax_node.parent().unwrap(), syntax_node.parent().unwrap().to_string());
             return None;
         }
     }
@@ -514,6 +565,10 @@ fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<(String, TextRange)>)
     let mut paths = Vec::new();
     for child in syntax_node.children() {
         match child.kind() {
+            SyntaxKind::ATTR => {
+                // TODO: There is an #[allow(unused)], should we ignore these?
+                continue;
+            }
             SyntaxKind::VISIBILITY => {
                 visibility = true;
             }
@@ -524,7 +579,10 @@ fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<(String, TextRange)>)
                     paths.append(&mut parse_use_tree(&child));
                 }
             }
-            _ => unreachable!(),
+            _ => {
+                println!("{:?} => {}", child, child.to_string());
+                unreachable!()
+            },
         }
     }
     (visibility, paths)
@@ -539,6 +597,10 @@ fn parse_use_tree(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
             SyntaxKind::PATH => {
                 current_prefix = sub_child.to_string();
                 current_text_range = sub_child.text_range();
+            }
+            SyntaxKind::RENAME => {
+                // TODO: Handle
+                continue;
             }
             SyntaxKind::USE_TREE_LIST => {
                 for use_tree in sub_child.children() {
@@ -591,26 +653,7 @@ fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
                                         }
                                     }
                                     SyntaxKind::GENERIC_ARG_LIST => {
-                                        for arg in p_segment_child.children() {
-                                            match arg.kind() {
-                                                SyntaxKind::TYPE_ARG => {
-                                                    for t_arg_child in arg.children() {
-                                                        match t_arg_child.kind() {
-                                                            SyntaxKind::PATH_TYPE
-                                                            | SyntaxKind::TUPLE_TYPE => {
-                                                                obj_uses.append(
-                                                                    &mut parse_nested_tuple_type(
-                                                                        &t_arg_child,
-                                                                    ),
-                                                                );
-                                                            }
-                                                            _ => continue,
-                                                        }
-                                                    }
-                                                }
-                                                _ => continue,
-                                            }
-                                        }
+                                        obj_uses.append(&mut parse_generic_arg_list(&p_segment_child));
                                     }
                                     _ => continue,
                                 }
@@ -625,6 +668,31 @@ fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
     }
 
     obj_uses
+}
+
+fn parse_generic_arg_list(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
+    let mut result = Vec::new();
+    for arg in syntax_node.children() {
+        match arg.kind() {
+            SyntaxKind::TYPE_ARG => {
+                for t_arg_child in arg.children() {
+                    match t_arg_child.kind() {
+                        SyntaxKind::PATH_TYPE
+                        | SyntaxKind::TUPLE_TYPE => {
+                            result.append(
+                                &mut parse_nested_tuple_type(
+                                    &t_arg_child,
+                                ),
+                            );
+                        }
+                        _ => continue,
+                    }
+                }
+            }
+            _ => continue,
+        }
+    }
+    result
 }
 
 fn parse_field_list(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
@@ -642,6 +710,12 @@ fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)>
     match syntax_node.kind() {
         SyntaxKind::NAME
         | SyntaxKind::IDENT_PAT
+        | SyntaxKind::LITERAL
+        | SyntaxKind::REST_PAT
+        | SyntaxKind::LITERAL_PAT
+        | SyntaxKind::MACRO_PAT
+        | SyntaxKind::FN_PTR_TYPE // TODO: Handle it in FN Parse function?
+        | SyntaxKind::FOR_TYPE // TODO: WTH is that?
         | SyntaxKind::WILDCARD_PAT
         | SyntaxKind::LIFETIME
         | SyntaxKind::VISIBILITY
@@ -649,18 +723,23 @@ fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)>
             return result;
         }
         SyntaxKind::TUPLE_TYPE
+        | SyntaxKind::PTR_TYPE
+        | SyntaxKind::INFER_TYPE
+        | SyntaxKind::REF_PAT
         | SyntaxKind::SLICE_TYPE
         | SyntaxKind::PAREN_TYPE
         | SyntaxKind::REF_TYPE
         | SyntaxKind::TUPLE_PAT
         | SyntaxKind::IMPL_TRAIT_TYPE
+        | SyntaxKind::ARRAY_TYPE
         | SyntaxKind::TYPE_BOUND_LIST
+        | SyntaxKind::DYN_TRAIT_TYPE
         | SyntaxKind::TYPE_BOUND => {
             for child in syntax_node.children() {
                 result.append(&mut parse_nested_tuple_type(&child));
             }
         }
-        SyntaxKind::PATH_TYPE => {
+        SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_STRUCT_PAT | SyntaxKind::RECORD_PAT | SyntaxKind::PATH_PAT | SyntaxKind::PATH_EXPR => {
             result.append(&mut parse_path_type(&syntax_node));
         }
         _ => {

@@ -176,7 +176,7 @@ impl ModuleTree {
     fn filter_primary_types(&mut self) {
         let primary_types = vec![
             "i8", "i16", "i32", "i64", "i128", "u8", "u16", "u32", "u64", "u128", "isize", "usize",
-            "str", "char", "f32", "f64", "bool", "Self", "self",
+            "str", "char", "f32", "f64", "bool", "Self", "self", "_",
         ];
         let object_primary_types = vec![
             "std::collections::HashMap",
