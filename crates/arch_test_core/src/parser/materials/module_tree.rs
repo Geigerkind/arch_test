@@ -5,6 +5,12 @@ use crate::parser::domain_values::{ObjectType, ObjectUse, UsableObject};
 use crate::parser::entities::ModuleNode;
 use crate::parser::services::parse_main_or_mod_file_into_tree;
 
+/// This object is used to parse the ModuleTree and its use relationships from a directory
+///
+/// Example:
+/// ```rust
+/// let module_tree = ModuleTree::new("src/lib.rs");
+/// ```
 #[derive(Debug)]
 pub struct ModuleTree {
     tree: Vec<ModuleNode>,
