@@ -174,7 +174,6 @@ impl ModuleTree {
     }
 
     fn filter_primary_types(&mut self) {
-        // TODO: We also need to consider combined types once we track them
         let primary_types = vec![
             "i8", "i16", "i32", "i64", "i128", "u8", "u16", "u32", "u64", "u128", "isize", "usize",
             "str", "char", "f32", "f64", "bool", "Self", "self",
@@ -184,6 +183,7 @@ impl ModuleTree {
             "std::collections::HashSet",
             "std::collections::VecDeque",
             "Vec",
+            "vec",
             "String",
             "std::collections::LinkedList",
             "std::collections::BTreeMap",

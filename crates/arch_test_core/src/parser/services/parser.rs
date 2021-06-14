@@ -109,10 +109,6 @@ fn parse_syntax_node_tree(
     }
 }
 
-// TODO: Generic types?
-// TODO: Handle Path attribute and *
-// TODO: Combined path types with custom impl, e.g. a::b::<c>::test(), where test was implemented by some trait in this crate
-// TODO: Impl Self object use filtering?
 fn parse_file_rec(
     syntax_node: &SyntaxNode,
     module_references: &mut Vec<(usize, String)>,
@@ -395,7 +391,19 @@ fn parse_file_rec(
             return None;
         }
         SyntaxKind::MACRO_CALL => {
-            // TODO: Handle properly
+            for child in syntax_node.children() {
+                match child.kind() {
+                    SyntaxKind::PATH => {
+                        usable_objects.push(UsableObject::new(
+                            false,
+                            ObjectType::ImplicitUse,
+                            child.to_string(),
+                            child.text_range(),
+                        ));
+                    }
+                    _ => continue,
+                }
+            }
             return None;
         }
         SyntaxKind::ATTR => {
