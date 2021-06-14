@@ -509,6 +509,9 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::IDENT_PAT
+        | SyntaxKind::RANGE_PAT
+        | SyntaxKind::DYN_TRAIT_TYPE
+        | SyntaxKind::MACRO_DEF
         | SyntaxKind::RECORD_EXPR
         | SyntaxKind::LIFETIME
         | SyntaxKind::WILDCARD_PAT
@@ -529,6 +532,9 @@ fn parse_file_rec(
             return None;
         }
         SyntaxKind::NAME_REF
+        | SyntaxKind::OR_PAT
+        | SyntaxKind::BOX_EXPR
+        | SyntaxKind::PTR_TYPE
         | SyntaxKind::INFER_TYPE
         | SyntaxKind::ARRAY_TYPE
         | SyntaxKind::MATCH_GUARD
@@ -725,6 +731,9 @@ fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)>
     let mut result = Vec::new();
     match syntax_node.kind() {
         SyntaxKind::NAME
+        | SyntaxKind::RANGE_PAT
+        | SyntaxKind::SLICE_PAT
+        | SyntaxKind::MACRO_TYPE
         | SyntaxKind::IDENT_PAT
         | SyntaxKind::LITERAL
         | SyntaxKind::REST_PAT
@@ -739,6 +748,7 @@ fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)>
             return result;
         }
         SyntaxKind::TUPLE_TYPE
+        | SyntaxKind::OR_PAT
         | SyntaxKind::PTR_TYPE
         | SyntaxKind::INFER_TYPE
         | SyntaxKind::REF_PAT
