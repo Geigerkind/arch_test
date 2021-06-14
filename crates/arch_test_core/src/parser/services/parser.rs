@@ -77,7 +77,18 @@ pub fn parse_main_or_mod_file_into_tree(
                     );
                 } else {
                     // Just discover all rust files in this directory
-                    // TODO: Create pseudo parent module?
+                    let current_index = tree.len();
+                    tree.push(ModuleNode::new(
+                        current_index,
+                        entry.path().to_str().unwrap().to_string(),
+                        level,
+                        Some(parent_index),
+                        sub_module,
+                    ));
+                    tree.get_mut(parent_index)
+                        .unwrap()
+                        .register_child(current_index);
+
                     for sub_entry in entry.path().read_dir().unwrap().filter_map(|etr| etr.ok()) {
                         let sub_entry_name = sub_entry.file_name().to_str().unwrap().to_string();
                         if sub_entry_name.ends_with(".rs") {
@@ -85,7 +96,7 @@ pub fn parse_main_or_mod_file_into_tree(
                                 tree,
                                 Path::new(&sub_entry.path()),
                                 tree[parent_index].level() + 1,
-                                Some(parent_index),
+                                Some(current_index),
                                 sub_entry_name.trim_end_matches(".rs").to_owned(),
                             );
                         }

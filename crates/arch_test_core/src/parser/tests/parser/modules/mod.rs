@@ -146,3 +146,17 @@ fn path_attribute() {
     assert_eq!(node_tree[1].module_name(), &"wambo".to_owned());
     assert_eq!(node_tree[1].level(), 1);
 }
+
+#[test]
+fn sub_module_without_mod() {
+    let mut node_tree = Vec::new();
+    let path = Path::new("src/parser/tests/parser/modules/sub_module_without_mod/main.rs");
+    parse_main_or_mod_file_into_tree(&mut node_tree, path, 0, None, "crate".to_owned());
+
+    assert_eq!(node_tree.len(), 3);
+    assert_eq!(node_tree[0].module_name(), "crate");
+    assert_eq!(node_tree[1].module_name(), "sub_mod");
+    assert_eq!(node_tree[1].parent_index(), Some(0));
+    assert_eq!(node_tree[2].module_name(), "file_1");
+    assert_eq!(node_tree[2].parent_index(), Some(1));
+}
