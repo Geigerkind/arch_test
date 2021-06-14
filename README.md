@@ -7,7 +7,7 @@
 [![Crates.2io](https://img.shields.io/crates/d/arch_test_core?label=cargo%20installs)](https://crates.io/crates/arch_test_core)
 
 <p align="center">
-  <img src="https://github.com/Geigerkind/arch_test/blob/master/logo.png" />
+  <img src="https://github.com/Geigerkind/arch_test/blob/master/logo.png?raw=true" />
 </p>
 ArchTest is a rule based architecture testing tool. 
 It applies static analyses on the specified rust project to extract use relationships.
