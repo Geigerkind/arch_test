@@ -1,3 +1,66 @@
+//! # ArchTest
+//! ArchTest is a rule based architecture testing tool. It applies static analyses on the specified rust project to extract use relationships.
+//!
+//! For a through documentation on how to use it for tests, please consult the [arch_test_core](https://docs.rs/arch_test_core/0.1.2/arch_test_core/) crate.
+//!
+//! ## Install
+//! ```sh
+//! cargo install cargo-archtest --force
+//! ```
+//!
+//! ## How to use it
+//! Define in the cargo root path a file called `architecture.json`. Fill it according to the `Specification` struct.
+//!
+//! Example
+//! ```json
+//! let architecture = Architecture::new(hash_set!["analyzer".to_owned(), "parser".to_owned(), ...])
+//! {
+//!   "layer_names": ["analyzer", "parser", "domain_values", "entities", "materials", "services", "tests", "utils"],
+//!   "access_rules": [
+//!     "NoLayerCyclicDependencies",
+//!     "NoModuleCyclicDependencies",
+//!     "NoParentAccess",
+//!     {
+//!       "MayNotAccess": {
+//!         "accessor": "parser",
+//!         "accessed": ["analyzer"],
+//!         "when_same_parent": true
+//!       }
+//!     },
+//!     {
+//!       "MayOnlyBeAccessedBy": {
+//!         "accessors": ["materials", "tests"],
+//!         "accessed": "services",
+//!         "when_same_parent": false
+//!       }
+//!     },
+//!     {
+//!       "MayNotBeAccessedBy": {
+//!         "accessors": ["services", "domain_values", "entities", "utils"],
+//!         "accessed": "materials",
+//!         "when_same_parent": true
+//!       }
+//!     }
+//!   ]
+//! }
+//! ```
+//! Then execute `cargo archtest` in your project directory.
+//!
+//! ## Contiinues integration
+//! You can use it in continues integration by using either methods. If you decide to use the Cargo sub command on GitHub, the following snippet will allow you to test your project.
+//! ```yml
+//! arch_test:
+//!    name: ArchTest
+//!    runs-on: ubuntu-latest
+//!    steps:
+//!      - uses: actions/checkout@v2
+//!      - uses: actions-rs/install@v0.1
+//!        with:
+//!          crate: cargo-archtest
+//!          version: latest
+//!      - run: cargo archtest
+//! ```
+
 extern crate cargo_toml;
 extern crate serde;
 #[macro_use]
