@@ -498,10 +498,6 @@ fn parse_file_rec(
                 }
             }
         }
-        SyntaxKind::RECORD_EXPR => {
-            // TODO: Handle
-            return None;
-        }
         SyntaxKind::GENERIC_ARG_LIST => {
             for (impl_use_path, text_range) in parse_generic_arg_list(&syntax_node) {
                 usable_objects.push(UsableObject::new(
@@ -513,6 +509,7 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::IDENT_PAT
+        | SyntaxKind::RECORD_EXPR
         | SyntaxKind::LIFETIME
         | SyntaxKind::WILDCARD_PAT
         | SyntaxKind::LABEL

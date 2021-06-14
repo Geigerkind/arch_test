@@ -1,4 +1,5 @@
 mod enum_stmt;
+mod expressions;
 mod functions;
 mod macros;
 mod modules;
