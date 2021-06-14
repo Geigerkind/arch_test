@@ -69,3 +69,28 @@ fn complex_generic() {
     assert_eq!(node_tree[0].usable_objects[9].object_name, "l".to_owned());
     assert_eq!(node_tree[0].usable_objects[10].object_name, "j".to_owned());
 }
+
+#[test]
+fn alias() {
+    let mut node_tree = Vec::new();
+    let path = Path::new("src/parser/tests/parser/types/alias.rs");
+    parse_main_or_mod_file_into_tree(&mut node_tree, path, 0, None, "WAMBO".to_owned());
+
+    assert_eq!(node_tree[0].usable_objects.len(), 2);
+    assert_eq!(
+        node_tree[0].usable_objects[0].object_type(),
+        ObjectType::TypeAlias
+    );
+    assert_eq!(
+        node_tree[0].usable_objects[0].object_name,
+        "testtype".to_owned()
+    );
+    assert_eq!(
+        node_tree[0].usable_objects[1].object_type(),
+        ObjectType::ImplicitUse
+    );
+    assert_eq!(
+        node_tree[0].usable_objects[1].object_name,
+        "a::b::c".to_owned()
+    );
+}
