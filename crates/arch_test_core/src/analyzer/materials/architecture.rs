@@ -9,8 +9,8 @@ use crate::parser::materials::ModuleTree;
 /// This is the central object that holds the architecture rules and executes them
 ///
 /// Example:
-/// ```rust
-/// let architecture = Architecture::new(hash_set!["analyzer".to_owned(), "parser".to_owned(), ...])
+/// ```ignore
+/// let architecture = Architecture::new(hash_set!["analyzer".to_owned(), "parser".to_owned()])
 /// .with_access_rule(NoParentAccess)
 /// .with_access_rule(NoModuleCyclicDependencies)
 /// .with_access_rule(NoLayerCyclicDependencies)

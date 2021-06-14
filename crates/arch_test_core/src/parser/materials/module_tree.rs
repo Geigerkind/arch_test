@@ -8,7 +8,7 @@ use crate::parser::services::parse_main_or_mod_file_into_tree;
 /// This object is used to parse the ModuleTree and its use relationships from a directory
 ///
 /// Example:
-/// ```rust
+/// ```ignore
 /// let module_tree = ModuleTree::new("src/lib.rs");
 /// ```
 #[derive(Debug)]
