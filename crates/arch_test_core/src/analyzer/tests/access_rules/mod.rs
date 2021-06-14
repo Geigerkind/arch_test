@@ -11,6 +11,11 @@ fn no_parent_access() {
     let architecture = Architecture::new(hash_set![]).with_access_rule(NoParentAccess);
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/no_parent_access/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -19,6 +24,11 @@ fn no_module_cyclic_dependencies() {
     let module_tree =
         ModuleTree::new("src/analyzer/tests/access_rules/no_module_cyclic_dependencies/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -27,6 +37,11 @@ fn no_layer_cyclic_dependencies() {
     let module_tree =
         ModuleTree::new("src/analyzer/tests/access_rules/no_layer_cyclic_dependencies/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -45,6 +60,11 @@ fn may_only_access_negative() {
         .with_access_rule(MayOnlyAccess::new("file_1".to_owned(), hash_set![], false));
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -63,6 +83,11 @@ fn may_only_access_when_same_parent_negative() {
     let module_tree =
         ModuleTree::new("src/analyzer/tests/access_rules/may_access_same_parent/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -73,6 +98,11 @@ fn may_not_access() {
         );
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -95,6 +125,11 @@ fn may_not_access_when_same_parent_negative() {
     let module_tree =
         ModuleTree::new("src/analyzer/tests/access_rules/may_access_same_parent/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -111,6 +146,11 @@ fn may_only_be_accessed_by() {
     ));
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -133,6 +173,11 @@ fn may_only_be_accessed_by_when_same_parent_negative() {
     let module_tree =
         ModuleTree::new("src/analyzer/tests/access_rules/may_access_same_parent/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -149,6 +194,11 @@ fn may_not_be_accessed_by() {
     ));
     let module_tree = ModuleTree::new("src/analyzer/tests/access_rules/may_access/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
@@ -171,6 +221,11 @@ fn may_not_be_accessed_by_when_same_parent_negative() {
     let module_tree =
         ModuleTree::new("src/analyzer/tests/access_rules/may_access_same_parent/main.rs");
     assert!(architecture.check_access_rules(&module_tree).is_err());
+    architecture
+        .check_access_rules(&module_tree)
+        .err()
+        .unwrap()
+        .print(module_tree.tree());
 }
 
 #[test]
