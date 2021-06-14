@@ -8,4 +8,5 @@ pub enum ObjectType {
     RePublish,
     Use,
     ImplicitUse,
+    TypeAlias
 }

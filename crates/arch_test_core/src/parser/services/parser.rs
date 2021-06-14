@@ -325,7 +325,6 @@ fn parse_file_rec(
                         }
                     }
                     SyntaxKind::ASSOC_ITEM_LIST => {
-                        // TODO: Properly handle assoc list for trait impl
                         for (impl_use_path, text_range) in parse_assoc_func_item_list(&child) {
                             usable_objects.push(UsableObject::new(
                                 false,
@@ -421,15 +420,6 @@ fn parse_file_rec(
                 }
             }
         }
-        SyntaxKind::IDENT_PAT
-        | SyntaxKind::ATTR
-        | SyntaxKind::RECORD_PAT
-        | SyntaxKind::LITERAL
-        | SyntaxKind::EXTERN_CRATE
-        | SyntaxKind::CONTINUE_EXPR
-        | SyntaxKind::BREAK_EXPR => {
-            return None;
-        }
         SyntaxKind::MACRO_CALL => {
             for child in syntax_node.children() {
                 match child.kind() {
@@ -444,6 +434,39 @@ fn parse_file_rec(
                     _ => continue,
                 }
             }
+        }
+        SyntaxKind::TYPE_ALIAS => {
+            let mut is_pub = false;
+            for child in syntax_node.children() {
+                match child.kind() {
+                    SyntaxKind::VISIBILITY => {
+                        is_pub = true;
+                    }
+                    SyntaxKind::NAME => {
+                        usable_objects.push(UsableObject::new(is_pub, ObjectType::TypeAlias, child.to_string(), child.text_range()));
+                    }
+                    SyntaxKind::PATH_TYPE => {
+                        for (impl_use_path, text_range) in parse_path_type(&child) {
+                            usable_objects.push(UsableObject::new(
+                                false,
+                                ObjectType::ImplicitUse,
+                                impl_use_path,
+                                text_range,
+                            ));
+                        }
+                    }
+                    _ => continue
+                }
+            }
+        }
+        SyntaxKind::IDENT_PAT
+        | SyntaxKind::MACRO_RULES
+        | SyntaxKind::ATTR
+        | SyntaxKind::RECORD_PAT
+        | SyntaxKind::LITERAL
+        | SyntaxKind::EXTERN_CRATE
+        | SyntaxKind::CONTINUE_EXPR
+        | SyntaxKind::BREAK_EXPR => {
             return None;
         }
         SyntaxKind::NAME_REF
