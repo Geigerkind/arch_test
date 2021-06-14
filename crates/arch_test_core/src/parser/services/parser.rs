@@ -14,7 +14,7 @@ pub fn parse_main_or_mod_file_into_tree(
     parent_index: Option<usize>,
     module_name: String,
 ) {
-    let mut module_references: Vec<(usize, String)> = Vec::new();
+    let mut module_references: Vec<(usize, String, Option<String>)> = Vec::new();
 
     let result = SourceFile::parse(&read_file_content(file_path));
     parse_syntax_node_tree(
@@ -34,8 +34,28 @@ pub fn parse_main_or_mod_file_into_tree(
         .unwrap()
         .filter_map(|entry| entry.ok())
         .collect();
-    for (parent_index, sub_module) in module_references {
-        if let Some(entry) = dir_entries.iter().find(|entry| {
+    for (parent_index, sub_module, sub_module_path) in module_references {
+        if let Some(sub_module_path) = sub_module_path {
+            let absolute_path = if sub_module_path.starts_with('/') {
+                sub_module_path
+            } else {
+                format!(
+                    "{}/{}",
+                    file_path.parent().unwrap().to_str().unwrap().to_string(),
+                    sub_module_path.replace("\"", "").trim_start_matches("./")
+                )
+            };
+            let path = Path::new(&absolute_path);
+            if path.exists() && path.is_file() {
+                parse_main_or_mod_file_into_tree(
+                    tree,
+                    path,
+                    tree[parent_index].level() + 1,
+                    Some(parent_index),
+                    sub_module,
+                );
+            }
+        } else if let Some(entry) = dir_entries.iter().find(|entry| {
             entry
                 .file_name()
                 .to_str()
@@ -73,7 +93,7 @@ fn parse_syntax_node_tree(
     level: usize,
     parent_index: Option<usize>,
     module_name: String,
-    module_references: &mut Vec<(usize, String)>,
+    module_references: &mut Vec<(usize, String, Option<String>)>,
 ) {
     let current_index = tree.len();
     tree.push(ModuleNode::new(
@@ -111,7 +131,7 @@ fn parse_syntax_node_tree(
 
 fn parse_file_rec(
     syntax_node: &SyntaxNode,
-    module_references: &mut Vec<(usize, String)>,
+    module_references: &mut Vec<(usize, String, Option<String>)>,
     usable_objects: &mut Vec<UsableObject>,
     current_index: usize,
 ) -> Option<(SyntaxNodeChildren, String)> {
@@ -320,10 +340,29 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::MODULE => {
+            let mut path: Option<String> = None;
             for child in syntax_node.children() {
                 match child.kind() {
+                    SyntaxKind::ATTR => {
+                        let mut found_path = false;
+                        for attr_child in child.children() {
+                            match attr_child.kind() {
+                                SyntaxKind::PATH => {
+                                    if attr_child.to_string() == *"path" {
+                                        found_path = true;
+                                    }
+                                }
+                                SyntaxKind::LITERAL => {
+                                    if found_path {
+                                        path = Some(attr_child.to_string());
+                                    }
+                                }
+                                _ => continue,
+                            }
+                        }
+                    }
                     SyntaxKind::NAME => {
-                        module_references.push((current_index, child.to_string()));
+                        module_references.push((current_index, child.to_string(), path.clone()));
                     }
                     SyntaxKind::ITEM_LIST => {
                         return Some((child.children(), module_references.pop().unwrap().1));
@@ -383,6 +422,7 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::IDENT_PAT
+        | SyntaxKind::ATTR
         | SyntaxKind::RECORD_PAT
         | SyntaxKind::LITERAL
         | SyntaxKind::EXTERN_CRATE
@@ -404,10 +444,6 @@ fn parse_file_rec(
                     _ => continue,
                 }
             }
-            return None;
-        }
-        SyntaxKind::ATTR => {
-            // TODO: Path Attribute!
             return None;
         }
         SyntaxKind::NAME_REF

@@ -130,3 +130,19 @@ fn nested_folders_and_files() {
     assert_eq!(node_tree[8].children(), &[]);
     assert_eq!(node_tree[8].usable_objects.len(), 0);
 }
+
+#[test]
+fn path_attribute() {
+    let mut node_tree = Vec::new();
+    let path = Path::new("src/parser/tests/parser/modules/path_attribute/main.rs");
+    parse_main_or_mod_file_into_tree(&mut node_tree, path, 0, None, "crate".to_owned());
+
+    assert_eq!(node_tree.len(), 2);
+    assert_eq!(
+        node_tree[1].file_path(),
+        &"src/parser/tests/parser/modules/path_attribute/file_1.rs".to_owned()
+    );
+    assert_eq!(node_tree[1].parent_index(), Some(0));
+    assert_eq!(node_tree[1].module_name(), &"wambo".to_owned());
+    assert_eq!(node_tree[1].level(), 1);
+}
