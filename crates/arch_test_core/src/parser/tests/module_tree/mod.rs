@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::parser::domain_values::ObjectUse;
+use crate::parser::domain_values::{ObjectType, ObjectUse};
 use crate::parser::entities::ModuleNode;
 use crate::ModuleTree;
 
@@ -74,10 +74,19 @@ fn path_wildcard() {
     let module_tree = ModuleTree::new("src/parser/tests/module_tree/path_wildcard/main.rs");
 
     let tree = module_tree.tree();
-    assert_eq!(tree[0].usable_objects.len(), 2);
+    assert_eq!(tree[0].usable_objects.len(), 3);
     assert_eq!(tree[0].usable_objects[0].object_name, "main".to_owned());
     assert_eq!(
+        tree[0].usable_objects[1].object_type(),
+        ObjectType::ImplicitUse
+    );
+    assert_eq!(
         tree[0].usable_objects[1].object_name,
+        "crate::ext_file::Test1".to_owned()
+    );
+    assert_eq!(tree[0].usable_objects[2].object_type(), ObjectType::Use);
+    assert_eq!(
+        tree[0].usable_objects[2].object_name,
         "crate::ext_file::Test1".to_owned()
     );
 
@@ -102,9 +111,22 @@ fn non_main_or_lib_root() {
 #[test]
 fn path_wildcard_unknown() {
     let module_tree = ModuleTree::new("src/parser/tests/module_tree/path_wildcard_unknown.rs");
+    assert!(module_tree.tree()[0].usable_objects.is_empty());
+}
 
+#[test]
+fn filter_unused_uses() {
+    let module_tree = ModuleTree::new("src/parser/tests/module_tree/filter_unused_uses/main.rs");
+
+    let tree = module_tree.tree();
+    assert_eq!(tree[0].usable_objects.len(), 3);
     assert_eq!(
-        module_tree.tree()[0].usable_objects[0].object_name,
-        "a::b::c".to_owned()
+        tree[0].usable_objects[0].object_name,
+        "crate::file_1::Test1".to_owned()
+    );
+    assert_eq!(tree[0].usable_objects[1].object_name, "main".to_owned());
+    assert_eq!(
+        tree[0].usable_objects[2].object_name,
+        "crate::file_1::Test1".to_owned()
     );
 }

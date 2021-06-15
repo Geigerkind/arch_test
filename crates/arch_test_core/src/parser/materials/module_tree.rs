@@ -40,8 +40,10 @@ impl ModuleTree {
         parse_main_or_mod_file_into_tree(&mut module_tree.tree, path, 0, None, module_name);
         module_tree.correct_fully_qualified_names();
         module_tree.replace_path_wildcard();
+        module_tree.correct_fully_qualified_names();
         module_tree.correct_republish_paths();
         module_tree.filter_primary_types();
+        module_tree.filter_unused_uses();
         module_tree.filter_covered_implicit_uses();
         module_tree.construct_possible_use_map();
         module_tree
@@ -286,6 +288,26 @@ impl ModuleTree {
                         && obj
                             .object_name
                             .ends_with(&node.usable_objects[i].object_name)
+                }) {
+                    node.usable_objects.remove(i);
+                }
+            }
+        }
+    }
+
+    fn filter_unused_uses(&mut self) {
+        for node in self.tree.iter_mut() {
+            for i in (0..node.usable_objects.len()).rev() {
+                if node.usable_objects[i].object_type() != ObjectType::Use
+                    && node.usable_objects[i].object_type() != ObjectType::RePublish
+                {
+                    continue;
+                }
+                if !node.usable_objects.iter().any(|obj| {
+                    obj.object_type() == ObjectType::ImplicitUse
+                        && obj
+                            .object_name
+                            .starts_with(&node.usable_objects[i].object_name)
                 }) {
                     node.usable_objects.remove(i);
                 }
