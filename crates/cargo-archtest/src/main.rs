@@ -46,8 +46,8 @@
 //! ```
 //! Then execute `cargo archtest` in your project directory.
 //!
-//! ## Contiinues integration
-//! You can use it in continues integration by using either methods. If you decide to use the Cargo sub command on GitHub, the following snippet will allow you to test your project.
+//! ## Continuous integration
+//! You can use it in continuous integration by using either methods. If you decide to use the Cargo sub command on GitHub, the following snippet will allow you to test your project.
 //! ```yml
 //! arch_test:
 //!    name: ArchTest

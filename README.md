@@ -88,8 +88,8 @@ If you are interested in the failure you can pretty print it like this:
 architecture.check_access_rules(&module_tree).err().unwrap().print(module_tree.tree());
 ```
 
-## Continues integration
-You can use it in continues integration by using either methods.
+## Continuous integration
+You can use it in continuous integration by using either methods.
 If you decide to use the Cargo sub command on GitHub, the following snippet will allow you to test your project.
 ```yml
 arch_test:
