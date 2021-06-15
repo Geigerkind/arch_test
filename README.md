@@ -49,15 +49,15 @@ Example:
     },
     {
       "MayOnlyBeAccessedBy": {
-        "accessors": ["materials", "tests"],
-        "accessed": "services",
+        "accessors": ["services", "tests"],
+        "accessed": "materials",
         "when_same_parent": false
       }
     },
     {
       "MayNotBeAccessedBy": {
-        "accessors": ["services", "domain_values", "entities", "utils"],
-        "accessed": "materials",
+        "accessors": ["materials", "domain_values", "entities", "utils"],
+        "accessed": "services",
         "when_same_parent": true
       }
     }
