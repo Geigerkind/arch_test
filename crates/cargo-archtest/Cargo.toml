@@ -18,11 +18,11 @@ include = [
 
 [dependencies]
 arch_test_core = { path = "../arch_test_core", version = "0.1.5" }
-structopt = "0.3.21"
-serde = "1.0.126"
-serde_derive = "1.0.126"
-serde_json = "1.0.64"
-cargo_toml = "0.9.2"
+structopt = "0.3.26"
+serde = "1.0.180"
+serde_derive = "1.0.180"
+serde_json = "1.0.104"
+cargo_toml = "0.15.1"
 
 [badges.codecov]
 branch = "master"
