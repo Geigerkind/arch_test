@@ -55,7 +55,7 @@ impl<'r> Architecture<'r> {
 
     pub fn check_access_rules(&self, module_tree: &ModuleTree) -> Result<(), RuleViolation> {
         for access_rule in self.access_rules.iter() {
-            access_rule.check(&module_tree)?;
+            access_rule.check(module_tree)?;
         }
         Ok(())
     }

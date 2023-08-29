@@ -41,8 +41,8 @@ pub fn parse_main_or_mod_file_into_tree(
             } else {
                 format!(
                     "{}/{}",
-                    file_path.parent().unwrap().to_str().unwrap().to_string(),
-                    sub_module_path.replace("\"", "").trim_start_matches("./")
+                    file_path.parent().unwrap().to_str().unwrap(),
+                    sub_module_path.replace('\"', "").trim_start_matches("./")
                 )
             };
             let path = Path::new(&absolute_path);
@@ -65,7 +65,7 @@ pub fn parse_main_or_mod_file_into_tree(
                 .ends_with(&sub_module)
         }) {
             if entry.path().is_dir() {
-                let path_str = format!("{}/mod.rs", entry.path().to_str().unwrap().to_string());
+                let path_str = format!("{}/mod.rs", entry.path().to_str().unwrap());
                 let mod_path = Path::new(&path_str);
                 if mod_path.exists() && mod_path.is_file() {
                     parse_main_or_mod_file_into_tree(
@@ -302,7 +302,7 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::PATH_EXPR | SyntaxKind::TUPLE_STRUCT_PAT | SyntaxKind::PATH_PAT => {
-            for (impl_use_path, text_range) in parse_path_type(&syntax_node) {
+            for (impl_use_path, text_range) in parse_path_type(syntax_node) {
                 usable_objects.push(UsableObject::new(
                     false,
                     ObjectType::ImplicitUse,
@@ -400,7 +400,7 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::PARAM_LIST => {
-            for (impl_use_path, text_range) in parse_field_list(&syntax_node) {
+            for (impl_use_path, text_range) in parse_field_list(syntax_node) {
                 usable_objects.push(UsableObject::new(
                     false,
                     ObjectType::ImplicitUse,
@@ -413,7 +413,7 @@ fn parse_file_rec(
         | SyntaxKind::PATH_TYPE
         | SyntaxKind::TUPLE_PAT
         | SyntaxKind::SLICE_TYPE => {
-            for (impl_use_path, text_range) in parse_nested_tuple_type(&syntax_node) {
+            for (impl_use_path, text_range) in parse_nested_tuple_type(syntax_node) {
                 usable_objects.push(UsableObject::new(
                     false,
                     ObjectType::ImplicitUse,
@@ -499,7 +499,7 @@ fn parse_file_rec(
             }
         }
         SyntaxKind::GENERIC_ARG_LIST => {
-            for (impl_use_path, text_range) in parse_generic_arg_list(&syntax_node) {
+            for (impl_use_path, text_range) in parse_generic_arg_list(syntax_node) {
                 usable_objects.push(UsableObject::new(
                     false,
                     ObjectType::ImplicitUse,
@@ -573,12 +573,12 @@ fn parse_file_rec(
             println!(
                 "UNHANDLED EXPRESSION: {:?} => {}",
                 syntax_node,
-                syntax_node.to_string()
+                syntax_node
             );
             println!(
                 " => Parent: {:?} => {}",
                 syntax_node.parent().unwrap(),
-                syntax_node.parent().unwrap().to_string()
+                syntax_node.parent().unwrap()
             );
             return None;
         }
@@ -606,7 +606,7 @@ fn parse_use_paths(syntax_node: &SyntaxNode) -> (bool, Vec<(String, TextRange)>)
                 }
             }
             _ => {
-                println!("{:?} => {}", child, child.to_string());
+                println!("{:?} => {}", child, child);
                 unreachable!()
             }
         }
@@ -672,7 +672,7 @@ fn parse_path_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)> {
                                                 format!(
                                                     "{}::{}",
                                                     current_path,
-                                                    p_segment_child.to_string()
+                                                    p_segment_child
                                                 ),
                                                 p_segment_child.text_range(),
                                             ));
@@ -766,10 +766,10 @@ fn parse_nested_tuple_type(syntax_node: &SyntaxNode) -> Vec<(String, TextRange)>
             }
         }
         SyntaxKind::PATH_TYPE | SyntaxKind::TUPLE_STRUCT_PAT | SyntaxKind::RECORD_PAT | SyntaxKind::PATH_PAT | SyntaxKind::PATH_EXPR => {
-            result.append(&mut parse_path_type(&syntax_node));
+            result.append(&mut parse_path_type(syntax_node));
         }
         _ => {
-            println!("{:?} => {}", syntax_node, syntax_node.to_string());
+            println!("{:?} => {}", syntax_node, syntax_node);
             unreachable!()
         }
     }

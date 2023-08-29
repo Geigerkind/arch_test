@@ -68,7 +68,7 @@ fn object_uses_with_children() {
     let node3_object_uses = tree[2].use_relations(tree, use_map, true);
     let node4_object_uses = tree[3].use_relations(tree, use_map, true);
 
-    assert_eq!(node1_object_uses.iter().count(), 3);
+    assert_eq!(node1_object_uses.len(), 3);
     assert!(
         node1_object_uses
             .iter()
@@ -103,7 +103,7 @@ fn object_uses_with_children() {
         "T1_2"
     );
 
-    assert_eq!(node2_object_uses.iter().count(), 2);
+    assert_eq!(node2_object_uses.len(), 2);
     assert!(
         node2_object_uses
             .iter()
@@ -127,8 +127,8 @@ fn object_uses_with_children() {
         "T2_1"
     );
 
-    assert_eq!(node3_object_uses.iter().count(), 0);
-    assert_eq!(node4_object_uses.iter().count(), 0);
+    assert_eq!(node3_object_uses.len(), 0);
+    assert_eq!(node4_object_uses.len(), 0);
 }
 
 #[test]
@@ -143,7 +143,7 @@ fn object_uses_without_children() {
     let node3_object_uses = tree[2].use_relations(tree, use_map, false);
     let node4_object_uses = tree[3].use_relations(tree, use_map, false);
 
-    assert_eq!(node1_object_uses.iter().count(), 1);
+    assert_eq!(node1_object_uses.len(), 1);
     assert!(
         node1_object_uses
             .iter()
@@ -155,7 +155,7 @@ fn object_uses_without_children() {
         "T1_0"
     );
 
-    assert_eq!(node2_object_uses.iter().count(), 2);
+    assert_eq!(node2_object_uses.len(), 2);
     assert!(
         node2_object_uses
             .iter()
@@ -179,6 +179,6 @@ fn object_uses_without_children() {
         "T2_1"
     );
 
-    assert_eq!(node3_object_uses.iter().count(), 0);
-    assert_eq!(node4_object_uses.iter().count(), 0);
+    assert_eq!(node3_object_uses.len(), 0);
+    assert_eq!(node4_object_uses.len(), 0);
 }

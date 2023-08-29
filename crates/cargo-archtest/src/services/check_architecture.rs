@@ -18,14 +18,14 @@ pub fn check_architecture(directory_path: &str, check_for_complete_layer_specifi
     if let Ok(architecture) = specification {
         let module_tree = ModuleTree::new(&root_path);
         if let Err(err) = architecture.validate_access_rules() {
-            err.print(&module_tree.tree());
+            err.print(module_tree.tree());
             std::process::exit(1);
         } else if let Err(err) = architecture.check_access_rules(&module_tree) {
-            err.print(&module_tree.tree());
+            err.print(module_tree.tree());
             std::process::exit(1);
         } else if check_for_complete_layer_specification {
             if let Err(err) = architecture.check_complete_layer_specification(&module_tree) {
-                err.print(&module_tree.tree());
+                err.print(module_tree.tree());
                 std::process::exit(1);
             }
         }
